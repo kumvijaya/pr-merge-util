@@ -15,31 +15,58 @@ properties([
 ])
 
 String prUrl = params.prUrl
-String requiredStatusDesc = 'CI build successful'
+String requiredStatusDesc = '<<Provide the check description>>' // Check description, update this as per need.
 
 node {
     def prInfo = getPRInfo(prUrl)
     echo "prInfo = ${prInfo}"
 }
 
+/**
+* Gets the PR Info for the given PR url.
+*/
 def getPRInfo(String prUrl) {
     def prInfo = [:]
-    String org = getOrg(prUrl)
-    String repo = getRepo(prUrl)
-    String prId = getPRNumber(prUrl)
-    String prApiUrl = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
+    String prApiUrl = getPRApiUrl(prUrl)
     def pr = getRequest(prApiUrl)
     prInfo['source'] = pr.head.ref
     prInfo['target'] = pr.base.ref
-    def reviews = getRequest("${prApiUrl}/reviews")
-    def approvedReviews = reviews.findAll { it.state == "APPROVED" }
-    prInfo['approvalCount'] = approvedReviews.size()
-    def statuses = getRequest(pr.statuses_url)
-    def requiredStatus = statuses.find { it.description == requiredStatusDesc &&  it.state == 'success'}
-    prInfo['checkSucceeded'] = requiredStatus != null
+    prInfo['approvalCount'] = getApprovalCount("${prApiUrl}/reviews")
+    prInfo['checkSucceeded'] = isCheckStatusSucceeded(pr.statuses_url, requiredStatusDesc)
     return prInfo
 }
 
+/**
+* Gets PR API Url
+*/
+def getPRApiUrl(String prUrl) {
+    String org = getOrg(prUrl)
+    String repo = getRepo(prUrl)
+    String prId = getPRNumber(prUrl)
+    return "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
+}
+
+/**
+* Gets PR Approval count
+*/
+def getApprovalCount(String prReviewsUrl) {
+    def reviews = getRequest(prReviewsUrl)
+    def approvedReviews = reviews.findAll { it.state == "APPROVED" }
+    return approvedReviews.size()
+}
+
+/**
+* Checks PR status check successful as per the given status desc
+*/
+def isCheckStatusSucceeded(String prStatusesUrl, String statusDesc) {
+    def statuses = getRequest(prStatusesUrl)
+    def requiredStatus = statuses.find { it.description == statusDesc &&  it.state == 'success'}
+    return requiredStatus != null
+}
+
+/**
+* Invokes the get request 
+*/
 def getRequest(String requestUrl) {
     def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
             validResponseCodes: '200',
