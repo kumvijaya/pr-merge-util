@@ -15,13 +15,15 @@ properties([
 ])
 
 node('') {
+
     String prUrl = params.prUrl
-    stage('PR check') {
+
+    stage('PR Check') {
         def prInfo = getPRInfo(prUrl)
         echo "prInfo = ${prInfo}"
     }
 
-    stage('PR merge') {
+    stage('PR Merge') {
         def prInfo = getPRInfo(prUrl)
         echo "prInfo = ${prInfo}"
     }
@@ -36,9 +38,14 @@ node('') {
         echo 'your-test-command'
     }
 
+    stage('Package') {
+        // Package your application
+        echo 'your-package-command'
+    }
+
     stage('Deploy') {
         // Deploy your application to a target environment
-        echo 'your-deployment-command'
+        echo 'your-deploy-command'
     }
 }
 
