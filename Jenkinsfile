@@ -15,7 +15,6 @@ properties([
 ])
 
 String prUrl = params.prUrl
-String requiredStatusDesc = '<<Provide the check description>>' // Check description, update this as per need.
 
 node {
     def prInfo = getPRInfo(prUrl)
@@ -32,6 +31,7 @@ def getPRInfo(String prUrl) {
     prInfo['source'] = pr.head.ref
     prInfo['target'] = pr.base.ref
     prInfo['approvalCount'] = getApprovalCount("${prApiUrl}/reviews")
+    String requiredStatusDesc = '<<Provide the check description>>' // Check description, update this as per need.
     prInfo['checkSucceeded'] = isCheckStatusSucceeded(pr.statuses_url, requiredStatusDesc)
     return prInfo
 }
