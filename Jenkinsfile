@@ -1,12 +1,6 @@
-pipeline {
-    agent {
-        docker { image 'node:20.9.0-alpine3.18' }
-    }
-    stages {
-        stage('Test') {
-            steps {
-                sh 'node --version'
-            }
-        }
-    }
+node {
+    def response = httpRequest "http://httpbin.org/response-headers"
+    println("Status: ${response.status}")
+    println("Response: ${response.content}")
+    println("Headers: ${response.headers}")
 }
