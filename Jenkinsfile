@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 properties([
     durabilityHint('PERFORMANCE_OPTIMIZED'),
     disableResume(),
@@ -39,6 +41,7 @@ def getPRInfo(String org, String repo, String prId) {
     def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
             validResponseCodes: '200',
             url: url
-    println("Status: ${response.status}")
-    println("Response: ${response.content}")
+    def json = new JsonSlurper().parseText(response.content)
+    echo "Status: ${response.status}"
+    echo "Pr info keys: ${json.keySet()}"
 }
