@@ -41,9 +41,14 @@ def getPRInfo(String org, String repo, String prId) {
     def pr = getRequest(prUrl)
     prInfo['source'] = pr.head.ref
     prInfo['target'] = pr.base.ref
-    String prReviewsUrl = "${prUrl}/reviews"
-    def reviews = getRequest(prReviewsUrl)
-    prInfo['reviewCount'] = reviews.size()
+    def reviews = getRequest("${prUrl}/reviews")
+    def approvalCount = 0
+    for (review in reviews) {
+       if(review.state == 'APPROVED') {
+            approvalCount ++
+       }
+    }
+    prInfo['approvalCount'] = approvalCount
     return prInfo
 }
 
