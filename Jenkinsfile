@@ -44,6 +44,7 @@ def getPRInfo(String org, String repo, String prId) {
     String prReviewsUrl = "${prUrl}/reviews"
     def reviews = getRequest(prReviewsUrl)
     prInfo['reviewCount'] = reviews.size()
+    return prInfo
 }
 
 def getRequest(String requestUrl) {
