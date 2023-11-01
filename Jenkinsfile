@@ -38,7 +38,7 @@ def getPRInfo(String org, String repo, String prId) {
     String prUrl = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
     def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
             validResponseCodes: '200',
-            url: url
+            url: prUrl
     def prInfo = new JsonSlurper().parseText(response.content)
     echo "Status: ${response.status}"
     echo "prInfo.head.ref: ${prInfo.head.ref}"
