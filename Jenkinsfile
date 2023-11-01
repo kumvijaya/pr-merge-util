@@ -31,7 +31,7 @@ String repo = params.repo
 String prId = params.prId
 
 node {
-    def response = httpRequest "http://httpbin.org/response-headers"
+    // def response = httpRequest "http://httpbin.org/response-headers"
     def prInfo = getPRInfo(org, repo, prId)
     echo "prInfo: ${prInfo}"
 }
