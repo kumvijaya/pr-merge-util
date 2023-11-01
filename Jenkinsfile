@@ -36,7 +36,7 @@ node {
 def getPRInfo(String org, String repo, String prId) {
     String url = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
 
-    def response = httpRequest authenticate: 'GITHUB_USER', httpMode: 'GET',
+    def response = httpRequest authenticate: 'GITHUB_USER_PASS', httpMode: 'GET',
             validResponseCodes: '200',
             url: url
     println("Status: ${response.status}")
