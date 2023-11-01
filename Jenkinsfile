@@ -32,16 +32,24 @@ String prId = params.prId
 
 node {
     def response = httpRequest "http://httpbin.org/response-headers"
-    getPRInfo(org, repo, prId)
+    def prInfo = getPRInfo(org, repo, prId)
+    echo "prInfo: ${prInfo}"
 }
 
 def getPRInfo(String org, String repo, String prId) {
-    String url = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
+    def prInfo = [:]
+    String prUrl = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
+    def pr = get(prUrl)
+    prInfo.source = pr.head.ref
+    prInfo.target = pr.base.ref
+    def reviews = get("${prUrl}/reviews")
+    prInfo.reviewCount = reviews.size()
+    return prInfo
+}
 
+def get(String url) {
     def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
             validResponseCodes: '200',
             url: url
-    def json = new JsonSlurper().parseText(response.content)
-    echo "Status: ${response.status}"
-    echo "Pr info keys: ${json.keySet()}"
+    return new JsonSlurper().parseText(response.content)
 }
