@@ -42,8 +42,8 @@ def getPRInfo(String org, String repo, String prId) {
     def pr = get(prUrl)
     prInfo.source = pr.head.ref
     prInfo.target = pr.base.ref
-    def reviews = get("${prUrl}/reviews")
-    prInfo.reviewCount = reviews.size()
+    // def reviews = get("${prUrl}/reviews")
+    // prInfo.reviewCount = reviews.size()
     return prInfo
 }
 
