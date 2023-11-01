@@ -6,29 +6,15 @@ properties([
     [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator',  daysToKeepStr: '90', numToKeepStr: '50']],
     parameters([
         string(
-            defaultValue: 'kumvijaya',
-            name: 'org',
+            defaultValue: 'https://github.com/kumvijaya/pr-test/pull/1',
+            name: 'prUrl',
             trim: true,
-            description: 'Provide github org name: (Example: kumvijaya).'
-        ),
-        string(
-            defaultValue: 'pr-test',
-            name: 'repo',
-            trim: true,
-            description: 'Provide the repository name (Ex: samples-repo1)'
-        ),
-        string(
-            defaultValue: '1',
-            name: 'prId',
-            trim: true,
-            description: 'Provide the pull request id (Ex: 1)'
+            description: 'Provide github pull request url: (Example: https://github.com/kumvijaya/pr-test/pull/1).'
         )
     ])
 ])
 
-String org = params.org
-String repo = params.repo
-String prId = params.prId
+String prUrl = params.prUrl
 String requiredStatusDesc = 'CI build successful'
 
 node {
@@ -36,13 +22,16 @@ node {
     echo "prInfo = ${prInfo}"
 }
 
-def getPRInfo(String org, String repo, String prId) {
+def getPRInfo(String prUrl) {
     def prInfo = [:]
-    String prUrl = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
-    def pr = getRequest(prUrl)
+    String org = getOrg(prUrl)
+    String repo = getRepo(prUrl)
+    String prId = getPRNumber(prUrl)
+    String prApiUrl = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
+    def pr = getRequest(prApiUrl)
     prInfo['source'] = pr.head.ref
     prInfo['target'] = pr.base.ref
-    def reviews = getRequest("${prUrl}/reviews")
+    def reviews = getRequest("${prApiUrl}/reviews")
     def approvedReviews = reviews.findAll { it.state == "APPROVED" }
     prInfo['approvalCount'] = approvedReviews.size()
     def statuses = getRequest(pr.statuses_url)
@@ -57,4 +46,27 @@ def getRequest(String requestUrl) {
             url: requestUrl
     def responseJson = new JsonSlurper().parseText(response.content)
     return responseJson
+}
+
+/**
+* Gets PR number from github pr url 
+*/
+def getPRNumber(String prUrl) {
+    return prUrl.tokenize('/').last()
+}
+
+/**
+* Gets the org name property from github pr url 
+*/
+def getOrg(String prUrl) {
+    String urlPart = prUrl.replace("https://github.com/", '')
+    return urlPart.tokenize('/').first()
+}
+
+/**
+* Gets the repo name property from github pr url 
+*/
+def getRepo(String prUrl) {
+    String urlPart = prUrl.replace("https://github.com/", '')
+    return urlPart.tokenize('/')[1]
 }
