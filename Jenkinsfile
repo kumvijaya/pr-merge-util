@@ -41,7 +41,6 @@ def getPRInfo(String org, String repo, String prId) {
     //         url: prUrl
     // def prInfo = new JsonSlurper().parseText(response.content)
     def prInfo = getRequest(prUrl)
-    echo "Status: ${response.status}"
     echo "prInfo.head.ref: ${prInfo.head.ref}"
     echo "prInfo.base.ref: ${prInfo.base.ref}"
     String prReviewsUrl = "${prUrl}/reviews"
