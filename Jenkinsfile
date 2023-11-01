@@ -31,25 +31,19 @@ String repo = params.repo
 String prId = params.prId
 
 node {
-    getPRInfo(org, repo, prId)
+    def prInfo = getPRInfo(org, repo, prId)
+    echo "prInfo = ${prInfo}"
 }
 
 def getPRInfo(String org, String repo, String prId) {
+    def prInfo = [:]
     String prUrl = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
-    // def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
-    //         validResponseCodes: '200',
-    //         url: prUrl
-    // def prInfo = new JsonSlurper().parseText(response.content)
-    def prInfo = getRequest(prUrl)
-    echo "prInfo.head.ref: ${prInfo.head.ref}"
-    echo "prInfo.base.ref: ${prInfo.base.ref}"
+    def pr = getRequest(prUrl)
+    prInfo['source'] = pr.head.ref
+    prInfo['target'] = pr.base.ref
     String prReviewsUrl = "${prUrl}/reviews"
-    // response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
-    //     validResponseCodes: '200',
-    //     url: prReviewsUrl
-    // def reviewInfo = new JsonSlurper().parseText(response.content)
-    def reviewInfo = getRequest(prReviewsUrl) 
-    echo "prInfo.reviews: ${reviewInfo}"
+    def reviews = getRequest(prReviewsUrl)
+    prInfo['reviewCount'] = reviews.size()
 }
 
 def getRequest(String requestUrl) {
