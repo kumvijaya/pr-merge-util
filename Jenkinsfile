@@ -16,24 +16,10 @@ properties([
 
 String prUrl = params.prUrl
 
-pipeline {
-    agent any
-    stages {
-        stage('PR check') { 
-            steps {
-                def prInfo = getPRInfo(prUrl)
-                echo "prInfo = ${prInfo}"
-            }
-        }
-    }
+node {
+    def prInfo = getPRInfo(prUrl)
+    echo "prInfo = ${prInfo}"
 }
-
-// String prUrl = params.prUrl
-
-// node {
-//     def prInfo = getPRInfo(prUrl)
-//     echo "prInfo = ${prInfo}"
-// }
 
 /**
 * Gets the PR Info for the given PR url.
