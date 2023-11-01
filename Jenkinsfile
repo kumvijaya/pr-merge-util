@@ -37,14 +37,15 @@ node {
 }
 
 def getPRInfo(String org, String repo, String prId) {
-    def prInfo = [:]
+    // def prInfo = [:]
     String prUrl = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
     // def pr = get(prUrl)
     // prInfo.source = pr.head.ref
     // prInfo.target = pr.base.ref
     // def reviews = get("${prUrl}/reviews")
     // prInfo.reviewCount = reviews.size()
-    return prInfo
+    // return prInfo
+    retun 'hi'
 }
 
 def get(String url) {
