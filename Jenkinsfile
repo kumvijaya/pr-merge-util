@@ -29,6 +29,7 @@ properties([
 String org = params.org
 String repo = params.repo
 String prId = params.prId
+String requiredStatusDesc = 'CI build successful'
 
 node {
     def prInfo = getPRInfo(org, repo, prId)
@@ -44,6 +45,9 @@ def getPRInfo(String org, String repo, String prId) {
     def reviews = getRequest("${prUrl}/reviews")
     def approvedReviews = reviews.findAll { it.state == "APPROVED" }
     prInfo['approvalCount'] = approvedReviews.size()
+    def statuses = getRequest(pr.statuses_url)
+    def requiredStatus = statuses.find { it.description == requiredStatusDesc &&  it.state == 'success'}
+    prInfo['checkSucceeded'] = requiredStatus != null
     return prInfo
 }
 
