@@ -10,7 +10,7 @@ properties([
             description: 'Provide github org name: (Example: kumvijaya).'
         ),
         string(
-            defaultValue: '',
+            defaultValue: 'pr-test',
             name: 'repo',
             trim: true,
             description: 'Provide the repository name (Ex: samples-repo1)'
