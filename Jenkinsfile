@@ -36,17 +36,27 @@ node {
 
 def getPRInfo(String org, String repo, String prId) {
     String prUrl = "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
-    def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
-            validResponseCodes: '200',
-            url: prUrl
-    def prInfo = new JsonSlurper().parseText(response.content)
+    // def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
+    //         validResponseCodes: '200',
+    //         url: prUrl
+    // def prInfo = new JsonSlurper().parseText(response.content)
+    def prInfo = getRequest(prUrl)
     echo "Status: ${response.status}"
     echo "prInfo.head.ref: ${prInfo.head.ref}"
     echo "prInfo.base.ref: ${prInfo.base.ref}"
     String prReviewsUrl = "${prUrl}/reviews"
-    response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
-        validResponseCodes: '200',
-        url: prReviewsUrl
-    def reviewInfo = new JsonSlurper().parseText(response.content)
-    echo "prInfo.base.ref: ${reviewInfo}"
+    // response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
+    //     validResponseCodes: '200',
+    //     url: prReviewsUrl
+    // def reviewInfo = new JsonSlurper().parseText(response.content)
+    def reviewInfo = getRequest(prReviewsUrl) 
+    echo "prInfo.reviews: ${reviewInfo}"
+}
+
+def getRequest(String requestUrl) {
+    def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
+            validResponseCodes: '200',
+            url: requestUrl
+    def responseJson = new JsonSlurper().parseText(response.content)
+    return responseJson
 }
