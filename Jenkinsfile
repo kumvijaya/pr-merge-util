@@ -18,7 +18,7 @@ String prUrl = params.prUrl
 String requiredStatusDesc = 'CI build successful'
 
 node {
-    def prInfo = getPRInfo(org, repo, prId)
+    def prInfo = getPRInfo(prUrl)
     echo "prInfo = ${prInfo}"
 }
 
