@@ -14,11 +14,32 @@ properties([
     ])
 ])
 
-String prUrl = params.prUrl
+node('') {
+    String prUrl = params.prUrl
+    stage('PR check') {
+        def prInfo = getPRInfo(prUrl)
+        echo "prInfo = ${prInfo}"
+    }
 
-node {
-    def prInfo = getPRInfo(prUrl)
-    echo "prInfo = ${prInfo}"
+    stage('PR merge') {
+        def prInfo = getPRInfo(prUrl)
+        echo "prInfo = ${prInfo}"
+    }
+
+    stage('Build') {
+        // Build your application
+        echo 'your-build-command'
+    }
+
+    stage('Test') {
+        // Run tests
+        echo 'your-test-command'
+    }
+
+    stage('Deploy') {
+        // Deploy your application to a target environment
+        echo 'your-deployment-command'
+    }
 }
 
 /**
