@@ -172,5 +172,5 @@ private String getEnvValue(String envKey, String defaultValue='') {
 * Is given string empty
 */
 private boolean isEmpty(String input) {
-    return input?.trim()
+    return !input?.trim()
 }
