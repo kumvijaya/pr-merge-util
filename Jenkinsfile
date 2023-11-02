@@ -36,7 +36,7 @@ node(agent) {
         }
     }
 
-    if(mergeResp.merged) {
+    if(mergeResp.containsKey('merged') && mergeResp.merged) {
         stage('Build') {
             // Build your application
             echo 'your-build-command'
