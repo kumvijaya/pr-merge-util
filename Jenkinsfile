@@ -122,6 +122,7 @@ private def getRequest(String requestUrl) {
 * Invokes the post request 
 */
 private def postRequest(requestUrl, requestBody) {
+    echo "requestUrl= $requestUrl"
     def response = httpRequest authentication: 'GITHUB_USER_PASS',
             acceptType: 'APPLICATION_JSON', 
             contentType: 'APPLICATION_JSON',
@@ -177,6 +178,8 @@ private boolean canMerge(prInfo) {
 private def mergePR(String prApiUrl) {
     String mergeReqUrl = "${prApiUrl}/merge"
     String mergeBody = getMergeBody()
+    echo "mergeReqUrl= $mergeReqUrl"
+    echo "mergeBody= $mergeBody"
     def respose = postRequest(mergeReqUrl, mergeBody)
     return prInfo
 }
