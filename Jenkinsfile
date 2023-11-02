@@ -73,7 +73,7 @@ private def getPRInfo(String prApiUrl) {
     prInfo['mergeable'] = pr.mergeable
     prInfo['mergeable_state'] = pr.mergeable_state
     prInfo['approvalCount'] = getApprovalCount("${prApiUrl}/reviews")
-    prInfo['checkSucceeded'] = isCheckStatusSucceeded(pr.statuses_url)
+    prInfo['statusChecksSucceeded'] = statusCheckSuccessful(pr.statuses_url)
     return prInfo
 }
 
@@ -99,15 +99,19 @@ private int getApprovalCount(String prReviewsUrl) {
 /**
 * Checks PR status check successful as per the given status desc
 */
-private boolean isCheckStatusSucceeded(String prStatusesUrl) {
-    String checkDesc = getEnvValue('PR_MERGE_CHECK_DESC', '')
-    boolean checkSucceeded = true
-    if(!isEmpty(checkDesc)) {
-        def statuses = getRequest(prStatusesUrl)
-        def requiredStatus = statuses.find { it.description == statusDesc &&  it.state == 'success'}
-        checkSucceeded = (requiredStatus != null)
+private boolean statusCheckSuccessful(String prStatusesUrl) {
+    def statuses = getRequest(prStatusesUrl)
+    String statusLables = getEnvValue('PR_MERGE_STATUS_LABELS', '')
+    def statusLableList = labels.split(',')
+    boolean allSucceeded = true
+    for (label in statusLableList) {
+        def status = statuses.find { it.context == label}
+        if(status.state != 'success') {
+            allSucceeded = false
+            break
+        }
     }
-    return checkSucceeded
+    return allSucceeded
 }
 
 /**
@@ -165,7 +169,7 @@ private String getRepo(String prUrl) {
 private boolean canMerge(prInfo) {
     int approvalcount = Integer.parseInt(getEnvValue('PR_MERGE_APPROVAL_COUNT', '2'))
     return (prInfo.approvalCount == approvalcount
-        && prInfo.checkSucceeded
+        && prInfo.statusChecksSucceeded
         && prInfo.state == 'open'
         && prInfo.mergeable
         && !prInfo.merged
