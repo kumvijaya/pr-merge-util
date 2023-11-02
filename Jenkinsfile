@@ -14,13 +14,17 @@ properties([
     ])
 ])
 
-node('') {
+String agent = getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')
+
+node(agent) {
 
     String prUrl = params.prUrl
 
     stage('PR Check') {
         def prInfo = getPRInfo(prUrl)
         echo "prInfo = ${prInfo}"
+        boolean mergeable = canMerge(prInfo)
+        echo "mergeable = ${mergeable}"
     }
 
     stage('PR Merge') {
@@ -52,22 +56,25 @@ node('') {
 /**
 * Gets the PR Info for the given PR url.
 */
-def getPRInfo(String prUrl) {
+private def getPRInfo(String prUrl) {
     def prInfo = [:]
     String prApiUrl = getPRApiUrl(prUrl)
     def pr = getRequest(prApiUrl)
     prInfo['source'] = pr.head.ref
     prInfo['target'] = pr.base.ref
+    prInfo['state'] = pr.state
+    prInfo['merged'] = pr.merged
+    prInfo['mergeable'] = pr.mergeable
+    prInfo['mergeable_state'] = pr.mergeable_state
     prInfo['approvalCount'] = getApprovalCount("${prApiUrl}/reviews")
-    String requiredStatusDesc = '<<Provide the check description>>' // Check description, update this as per need.
-    prInfo['checkSucceeded'] = isCheckStatusSucceeded(pr.statuses_url, requiredStatusDesc)
+    prInfo['checkSucceeded'] = isCheckStatusSucceeded(pr.statuses_url)
     return prInfo
 }
 
 /**
 * Gets PR API Url
 */
-def getPRApiUrl(String prUrl) {
+private String getPRApiUrl(String prUrl) {
     String org = getOrg(prUrl)
     String repo = getRepo(prUrl)
     String prId = getPRNumber(prUrl)
@@ -77,7 +84,7 @@ def getPRApiUrl(String prUrl) {
 /**
 * Gets PR Approval count
 */
-def getApprovalCount(String prReviewsUrl) {
+private int getApprovalCount(String prReviewsUrl) {
     def reviews = getRequest(prReviewsUrl)
     def approvedReviews = reviews.findAll { it.state == "APPROVED" }
     return approvedReviews.size()
@@ -86,16 +93,21 @@ def getApprovalCount(String prReviewsUrl) {
 /**
 * Checks PR status check successful as per the given status desc
 */
-def isCheckStatusSucceeded(String prStatusesUrl, String statusDesc) {
-    def statuses = getRequest(prStatusesUrl)
-    def requiredStatus = statuses.find { it.description == statusDesc &&  it.state == 'success'}
-    return requiredStatus != null
+private boolean isCheckStatusSucceeded(String prStatusesUrl) {
+    String checkDesc = getEnvValue('PR_MERGE_CHECK_DESC', '')
+    boolean checkSucceeded = true
+    if(checkDesc?.trim()) {
+        def statuses = getRequest(prStatusesUrl)
+        def requiredStatus = statuses.find { it.description == statusDesc &&  it.state == 'success'}
+        checkSucceeded = (requiredStatus != null)
+    }
+    return checkSucceeded
 }
 
 /**
 * Invokes the get request 
 */
-def getRequest(String requestUrl) {
+private def getRequest(String requestUrl) {
     def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'GET',
             validResponseCodes: '200',
             url: requestUrl
@@ -106,14 +118,14 @@ def getRequest(String requestUrl) {
 /**
 * Gets PR number from github pr url 
 */
-def getPRNumber(String prUrl) {
+private String getPRNumber(String prUrl) {
     return prUrl.tokenize('/').last()
 }
 
 /**
 * Gets the org name property from github pr url 
 */
-def getOrg(String prUrl) {
+private String getOrg(String prUrl) {
     String urlPart = prUrl.replace("https://github.com/", '')
     return urlPart.tokenize('/').first()
 }
@@ -121,7 +133,36 @@ def getOrg(String prUrl) {
 /**
 * Gets the repo name property from github pr url 
 */
-def getRepo(String prUrl) {
+private String getRepo(String prUrl) {
     String urlPart = prUrl.replace("https://github.com/", '')
     return urlPart.tokenize('/')[1]
+}
+
+/**
+* Check given PR can be merged
+*/
+private boolean canMerge(prInfo) {
+    int approvalcount = Integer.parseInt(getEnvValue('PR_MERGE_APPROVAL_COUNT', '2'))
+    echo "Required approvalcount: $approvalcount"
+    return (prInfo.approvalCount == approvalcount
+        && prInfo.checkSucceeded
+        && prInfo.state == 'open'
+        && prInfo.mergeable
+        && !prInfo.merged
+        && prInfo.mergeable_state == 'clean')
+}
+
+/**
+* Gets the env variable value
+*/
+private String getEnvValue(String envKey, String defaultValue='') {
+	String envValue = defaultValue
+	def envMap = env.getEnvironment()
+	envMap.each{ key, value ->
+		if (key == envKey) {
+			envValue = StringUtils.isNotBlank(value) ? value : defaultValue
+			return envValue
+		}
+	}
+	return envValue
 }
