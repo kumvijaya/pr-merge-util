@@ -121,12 +121,12 @@ private def getRequest(String requestUrl) {
 /**
 * Invokes the post request 
 */
-private def postRequest(requestUrl, requestBody) {
+private def putRequest(requestUrl, requestBody) {
     echo "requestUrl= $requestUrl"
     def response = httpRequest authentication: 'GITHUB_USER_PASS',
             acceptType: 'APPLICATION_JSON', 
             contentType: 'APPLICATION_JSON',
-            httpMode: 'POST', quiet: true,
+            httpMode: 'PUT', quiet: true,
             requestBody: requestBody,
             validResponseCodes: '200,201,204',
             url: requestUrl
@@ -180,7 +180,7 @@ private def mergePR(String prApiUrl) {
     String mergeBody = getMergeBody()
     echo "mergeReqUrl= $mergeReqUrl"
     echo "mergeBody= $mergeBody"
-    def respose = postRequest(mergeReqUrl, mergeBody)
+    def respose = putRequest(mergeReqUrl, mergeBody)
     return prInfo
 }
 
