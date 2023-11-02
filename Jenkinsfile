@@ -24,14 +24,13 @@ node(agent) {
     stage('Fetch PR') {
         prInfo = getPRInfo(prApiUrl)
         echo "prInfo = ${prInfo}"
-        
     }
 
     stage('Merge PR') {
-        boolean mergeable = canMerge(prInfo)
-        echo "mergeable = ${mergeable}"
-        if(mergeable) {
-            mergePR(prApiUrl)
+        if(canMerge(prInfo)) {
+           echo "PR is mergeable"
+           def mergeResp = mergePR(prApiUrl)
+           echo "mergeResp = ${mergeResp}"
         }
     }
 
@@ -121,7 +120,6 @@ private def getRequest(String requestUrl) {
 * Invokes the post request 
 */
 private def putRequest(requestUrl, requestBody) {
-    echo "requestUrl= $requestUrl"
     def response = httpRequest authentication: 'GITHUB_USER_PASS',
             acceptType: 'APPLICATION_JSON', 
             contentType: 'APPLICATION_JSON',
@@ -161,7 +159,6 @@ private String getRepo(String prUrl) {
 */
 private boolean canMerge(prInfo) {
     int approvalcount = Integer.parseInt(getEnvValue('PR_MERGE_APPROVAL_COUNT', '2'))
-    echo "Required approvalcount: $approvalcount"
     return (prInfo.approvalCount == approvalcount
         && prInfo.checkSucceeded
         && prInfo.state == 'open'
@@ -177,8 +174,6 @@ private boolean canMerge(prInfo) {
 private def mergePR(String prApiUrl) {
     String mergeReqUrl = "${prApiUrl}/merge"
     String mergeBody = getMergeBody()
-    echo "mergeReqUrl= $mergeReqUrl"
-    echo "mergeBody= $mergeBody"
     return putRequest(mergeReqUrl, mergeBody)
 }
 
