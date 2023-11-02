@@ -32,7 +32,7 @@ node(agent) {
             mergeResp = mergePR(prApiUrl)
             echo "mergeResp = ${mergeResp}"
         }else {
-            echo "PR is not yet mergeable"
+            echo "PR is not mergeable"
         }
     }
 
