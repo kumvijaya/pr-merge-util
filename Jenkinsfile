@@ -96,7 +96,7 @@ private int getApprovalCount(String prReviewsUrl) {
 private boolean isCheckStatusSucceeded(String prStatusesUrl) {
     String checkDesc = getEnvValue('PR_MERGE_CHECK_DESC', '')
     boolean checkSucceeded = true
-    if(checkDesc?.trim()) {
+    if(!isEmpty(checkDesc)) {
         def statuses = getRequest(prStatusesUrl)
         def requiredStatus = statuses.find { it.description == statusDesc &&  it.state == 'success'}
         checkSucceeded = (requiredStatus != null)
@@ -160,9 +160,16 @@ private String getEnvValue(String envKey, String defaultValue='') {
 	def envMap = env.getEnvironment()
 	envMap.each{ key, value ->
 		if (key == envKey) {
-			envValue = StringUtils.isNotBlank(value) ? value : defaultValue
+			envValue = !isEmpty(value) ? value : defaultValue
 			return envValue
 		}
 	}
 	return envValue
+}
+
+/**
+* Is given string empty
+*/
+private boolean isEmpty(String input) {
+    return input?.trim()
 }
