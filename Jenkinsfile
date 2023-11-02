@@ -102,7 +102,7 @@ private int getApprovalCount(String prReviewsUrl) {
 private boolean statusCheckSuccessful(String prStatusesUrl) {
     def statuses = getRequest(prStatusesUrl)
     String statusLables = getEnvValue('PR_MERGE_STATUS_LABELS', '')
-    def statusLableList = labels.split(',')
+    def statusLableList = statusLables.split(',')
     boolean allSucceeded = true
     for (label in statusLableList) {
         def status = statuses.find { it.context == label}
