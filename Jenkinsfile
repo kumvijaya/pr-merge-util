@@ -106,7 +106,7 @@ private boolean statusCheckSuccessful(String prStatusesUrl) {
     boolean allSucceeded = true
     for (label in statusLableList) {
         def status = statuses.find { it.context == label}
-        if(status.state != 'success') {
+        if(status != null && status.state != 'success') {
             allSucceeded = false
             break
         }
