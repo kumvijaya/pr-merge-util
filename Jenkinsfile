@@ -122,7 +122,7 @@ private def getRequest(String requestUrl) {
 * Invokes the post request 
 */
 private def postRequest(requestUrl, requestBody) {
-    def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'POST',
+    def response = httpRequest authentication: 'GITHUB_USER_PASS',
             acceptType: 'APPLICATION_JSON', 
             contentType: 'APPLICATION_JSON',
             httpMode: 'POST', quiet: true,
