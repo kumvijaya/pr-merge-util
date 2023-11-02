@@ -180,8 +180,7 @@ private def mergePR(String prApiUrl) {
     String mergeBody = getMergeBody()
     echo "mergeReqUrl= $mergeReqUrl"
     echo "mergeBody= $mergeBody"
-    def respose = putRequest(mergeReqUrl, mergeBody)
-    return prInfo
+    return putRequest(mergeReqUrl, mergeBody)
 }
 
 /**
