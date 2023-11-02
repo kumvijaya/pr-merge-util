@@ -31,8 +31,7 @@ node(agent) {
         boolean mergeable = canMerge(prInfo)
         echo "mergeable = ${mergeable}"
         if(mergeable) {
-            def mergeResponse = mergePR(prApiUrl)
-            echo "mergeResponse = ${mergeResponse}"
+            mergePR(prApiUrl)
         }
     }
 
@@ -126,7 +125,7 @@ private def putRequest(requestUrl, requestBody) {
     def response = httpRequest authentication: 'GITHUB_USER_PASS',
             acceptType: 'APPLICATION_JSON', 
             contentType: 'APPLICATION_JSON',
-            httpMode: 'PUT', quiet: true,
+            httpMode: 'PUT',
             requestBody: requestBody,
             validResponseCodes: '200,201,204',
             url: requestUrl
