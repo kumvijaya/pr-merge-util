@@ -158,6 +158,7 @@ private boolean canMerge(prInfo) {
 private String getEnvValue(String envKey, String defaultValue='') {
 	String envValue = defaultValue
 	def envMap = env.getEnvironment()
+    echo "envMap= $envMap"
 	envMap.each{ key, value ->
 		if (key == envKey) {
 			envValue = !isEmpty(value) ? value : defaultValue
