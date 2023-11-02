@@ -128,7 +128,7 @@ private def postRequest(requestUrl, requestBody) {
             contentType: 'APPLICATION_JSON',
             httpMode: 'POST', quiet: true,
             requestBody: requestBody,
-            validResponseCodes: '200,201,204'
+            validResponseCodes: '200,201,204',
             url: requestUrl
     def responseJson = new JsonSlurper().parseText(response.content)
     return responseJson
