@@ -25,34 +25,39 @@ node(agent) {
         prInfo = getPRInfo(prApiUrl)
         echo "prInfo = ${prInfo}"
     }
-
+    def mergeResp = [:]
     stage('Merge PR') {
         if(canMerge(prInfo)) {
-           echo "PR is mergeable"
-           def mergeResp = mergePR(prApiUrl)
-           echo "mergeResp = ${mergeResp}"
+            echo "PR is mergeable. Merging.."
+            mergeResp = mergePR(prApiUrl)
+            echo "mergeResp = ${mergeResp}"
+        }else {
+            echo "PR is not yet mergeable"
         }
     }
 
-    // stage('Build') {
-    //     // Build your application
-    //     echo 'your-build-command'
-    // }
+    if(mergeResp.merged) {
+        stage('Build') {
+            // Build your application
+            echo 'your-build-command'
+        }
 
-    // stage('Test') {
-    //     // Run tests
-    //     echo 'your-test-command'
-    // }
+        stage('Test') {
+            // Run tests
+            echo 'your-test-command'
+        }
 
-    // stage('Package') {
-    //     // Package your application
-    //     echo 'your-package-command'
-    // }
+        stage('Package') {
+            // Package your application
+            echo 'your-package-command'
+        }
 
-    // stage('Deploy') {
-    //     // Deploy your application to a target environment
-    //     echo 'your-deploy-command'
-    // }
+        stage('Deploy') {
+            // Deploy your application to a target environment
+            echo 'your-deploy-command'
+        }
+    }
+    
 }
 
 /**
@@ -192,7 +197,6 @@ private String getMergeBody() {
 private String getEnvValue(String envKey, String defaultValue='') {
 	String envValue = defaultValue
 	def envMap = env.getEnvironment()
-    echo "envMap= $envMap"
 	envMap.each{ key, value ->
 		if (key == envKey) {
 			envValue = !isEmpty(value) ? value : defaultValue
