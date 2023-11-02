@@ -19,46 +19,49 @@ String agent = getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')
 node(agent) {
 
     String prUrl = params.prUrl
-
-    stage('PR Check') {
-        def prInfo = getPRInfo(prUrl)
+    String prApiUrl = getPRApiUrl(prUrl)
+    def prInfo
+    stage('Fetch PR') {
+        prInfo = getPRInfo(prApiUrl)
         echo "prInfo = ${prInfo}"
+        
+    }
+
+    stage('Merge PR') {
         boolean mergeable = canMerge(prInfo)
         echo "mergeable = ${mergeable}"
+        if(mergeable) {
+            def mergeResponse = mergePR(prApiUrl)
+            echo "mergeResponse = ${mergeResponse}"
+        }
     }
 
-    stage('PR Merge') {
-        def prInfo = getPRInfo(prUrl)
-        echo "prInfo = ${prInfo}"
-    }
+    // stage('Build') {
+    //     // Build your application
+    //     echo 'your-build-command'
+    // }
 
-    stage('Build') {
-        // Build your application
-        echo 'your-build-command'
-    }
+    // stage('Test') {
+    //     // Run tests
+    //     echo 'your-test-command'
+    // }
 
-    stage('Test') {
-        // Run tests
-        echo 'your-test-command'
-    }
+    // stage('Package') {
+    //     // Package your application
+    //     echo 'your-package-command'
+    // }
 
-    stage('Package') {
-        // Package your application
-        echo 'your-package-command'
-    }
-
-    stage('Deploy') {
-        // Deploy your application to a target environment
-        echo 'your-deploy-command'
-    }
+    // stage('Deploy') {
+    //     // Deploy your application to a target environment
+    //     echo 'your-deploy-command'
+    // }
 }
 
 /**
 * Gets the PR Info for the given PR url.
 */
-private def getPRInfo(String prUrl) {
+private def getPRInfo(String prApiUrl) {
     def prInfo = [:]
-    String prApiUrl = getPRApiUrl(prUrl)
     def pr = getRequest(prApiUrl)
     prInfo['source'] = pr.head.ref
     prInfo['target'] = pr.base.ref
@@ -116,6 +119,21 @@ private def getRequest(String requestUrl) {
 }
 
 /**
+* Invokes the post request 
+*/
+private def postRequest(requestUrl, requestBody) {
+    def response = httpRequest authentication: 'GITHUB_USER_PASS', httpMode: 'POST',
+            acceptType: 'APPLICATION_JSON', 
+            contentType: 'APPLICATION_JSON',
+            httpMode: 'POST', quiet: true,
+            requestBody: requestBody,
+            validResponseCodes: '200,201,204'
+            url: requestUrl
+    def responseJson = new JsonSlurper().parseText(response.content)
+    return responseJson
+}
+
+/**
 * Gets PR number from github pr url 
 */
 private String getPRNumber(String prUrl) {
@@ -150,6 +168,26 @@ private boolean canMerge(prInfo) {
         && prInfo.mergeable
         && !prInfo.merged
         && prInfo.mergeable_state == 'clean')
+}
+
+
+/**
+* Gets the PR Info for the given PR url.
+*/
+private def mergePR(String prApiUrl) {
+    String mergeReqUrl = "${prApiUrl}/merge"
+    String mergeBody = getMergeBody()
+    def respose = postRequest(mergeReqUrl, mergeBody)
+    return prInfo
+}
+
+/**
+* Gets the PR merge body json.
+*/
+private String getMergeBody() {
+    String mergeTitle = 'PR merged by PR Utility (Jenkins)'
+    String mergeDesc = 'PR merged by PR Utility (Jenkins) with required checks'
+    return "{\"commit_title\":\"${mergeTitle}\",\"commit_message\":\"${mergeDesc}\"}"
 }
 
 /**
