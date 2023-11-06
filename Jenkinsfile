@@ -23,15 +23,15 @@ node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
         }
         stage('Build') {
             // Build your application
-            sh 'npm install'
+            powershell 'npm install'
         }
         stage('Test') {
             // Run tests
-            sh 'npm test'
+            powershell 'npm test'
         }
         stage('Deploy') {
             // Deploy your application to a target environment
-            sh 'npm pack'
+            powershell 'npm pack'
             String name = sh (script: 'npm pkg get version | xargs echo', returnStdout: true).trim()
             String version = sh (script: 'npm pkg get version | xargs echo', returnStdout: true).trim()
             String packageName = "${name}-${version}"
