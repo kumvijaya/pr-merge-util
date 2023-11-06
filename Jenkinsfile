@@ -32,7 +32,9 @@ node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
         stage('Deploy') {
             // Deploy your application to a target environment
             powershell 'npm pack'
+            String packageName = "find '.' -type f -name '*.tgz'"
             sh "mv ${packageName}.tgz ${packageName}_pr_${prInfo.number}.tgz"
+            sh "ls -ltr"
         }
         // Additional stages or post-build actions can be added here
     }
