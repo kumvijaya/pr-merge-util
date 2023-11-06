@@ -14,31 +14,21 @@ properties([
     ])
 ])
 
-String agent = getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')
-
-node(agent) {
-    def prInfo
-    stage('Merge Pull Request') {
-        prInfo = processPRMerge(params.prUrl)
-    }
-
-    if(prInfo != null && prInfo.mergeSuccessful) {
-
+node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
+    def prInfo = processPRMerge(params.prUrl)
+    if(prInfo.mergeSuccessful) {
         stage('Checkout') {
             // Check out your source code repository as per pr target branch
             git branch: prInfo.targetBranch, url: prInfo.repoUrl
         }
-
         stage('Build') {
             // Build your application
             sh 'npm install'
         }
-
         stage('Test') {
             // Run tests
             sh 'npm test'
         }
-
         stage('Deploy') {
             // Deploy your application to a target environment
             sh 'npm pack'
@@ -57,19 +47,20 @@ node(agent) {
 */
 private def processPRMerge(prUrl) {
     def prInfo = [:]
-    prInfo['org'] = getOrg(prUrl)
-    prInfo['repo'] = getRepo(prUrl)
-    prInfo['number'] = getPRNumber(prUrl)
-    prInfo['repoUrl'] = getRepoUrl(prInfo)
-    prInfo['apiUrl'] = getPRApiUrl(prInfo)
-    
-    populatePRInfo(prInfo)
-    echo "Received Pull Request Info ${prInfo}"
-    validatePR(prInfo)
-    echo "Pull request validatad sucessfully"
-    def mergeResp = mergePR(prApiUrl)
-    echo "Pull request merged : ${mergeResp}"
-    prInfo['mergeSuccessful'] = mergeResp.containsKey('merged') && mergeResp.merged
+    stage('Merge Pull Request') {
+        prInfo['org'] = getOrg(prUrl)
+        prInfo['repo'] = getRepo(prUrl)
+        prInfo['number'] = getPRNumber(prUrl)
+        prInfo['repoUrl'] = getRepoUrl(prInfo)
+        prInfo['apiUrl'] = getPRApiUrl(prInfo)
+        populatePRInfo(prInfo)
+        echo "Received Pull Request Info ${prInfo}"
+        validatePR(prInfo)
+        echo "Pull request validatad sucessfully"
+        def mergeResp = mergePR(prApiUrl)
+        echo "Pull request merged : ${mergeResp}"
+        prInfo['mergeSuccessful'] = mergeResp.containsKey('merged') && mergeResp.merged
+    }
     return prInfo
 }
 
