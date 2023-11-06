@@ -45,6 +45,9 @@
 ## File-based project format:
 *.iws
 
+## npm packages
+*.tgz
+
 ## Plugin-specific files:
 
 # IntelliJ
