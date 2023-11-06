@@ -32,14 +32,10 @@ node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
         stage('Deploy') {
             // Deploy your application to a target environment
             powershell 'npm pack'
-            String name = sh (script: 'npm pkg get version | xargs echo', returnStdout: true).trim()
-            String version = sh (script: 'npm pkg get version | xargs echo', returnStdout: true).trim()
-            String packageName = "${name}-${version}"
             sh "mv ${packageName}.tgz ${packageName}_pr_${prInfo.number}.tgz"
         }
         // Additional stages or post-build actions can be added here
     }
-    
 }
 
 /**
