@@ -94,7 +94,6 @@ private void validatePR(prInfo) {
 * Gets the PR Info for the given PR url.
 */
 private void populatePRInfo(prInfo) {
-    def prInfo = [:]
     def pr = getRequest(prInfo.apiUrl)
     prInfo['sourceBranch'] = pr.head.ref
     prInfo['targetBranch'] = pr.base.ref
