@@ -109,7 +109,7 @@ private void populatePRInfo(prInfo) {
 * Gets PR API Url
 */
 private String getPRApiUrl(prInfo)  {
-    return "https://api.github.com/repos/${prInfo.org}/${prInfo.repo}/pulls/${prInfo.prId}"
+    return "https://api.github.com/repos/${prInfo.org}/${prInfo.repo}/pulls/${prInfo.number}"
 }
 
 /**
