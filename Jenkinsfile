@@ -17,74 +17,116 @@ properties([
 String agent = getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')
 
 node(agent) {
-
-    String prUrl = params.prUrl
-    String prApiUrl = getPRApiUrl(prUrl)
     def prInfo
-    stage('Fetch PR') {
-        prInfo = getPRInfo(prApiUrl)
-        echo "prInfo = ${prInfo}"
-    }
-    def mergeResp = [:]
-    stage('Merge PR') {
-        if(canMerge(prInfo)) {
-            echo "PR is mergeable. Merging.."
-            mergeResp = mergePR(prApiUrl)
-            echo "mergeResp = ${mergeResp}"
-        }else {
-            echo "PR is not mergeable"
-        }
+    stage('Merge Pull Request') {
+        prInfo = processPRMerge(params.prUrl)
     }
 
-    if(mergeResp.containsKey('merged') && mergeResp.merged) {
+    if(prInfo != null && prInfo.mergeSuccessful) {
+
+        stage('Checkout') {
+            // Check out your source code repository as per pr target branch
+            git branch: prInfo.targetBranch, url: prInfo.repoUrl
+        }
+
         stage('Build') {
             // Build your application
-            echo 'your-build-command'
+            sh 'npm install'
         }
 
         stage('Test') {
             // Run tests
-            echo 'your-test-command'
-        }
-
-        stage('Package') {
-            // Package your application
-            echo 'your-package-command'
+            sh 'npm test'
         }
 
         stage('Deploy') {
             // Deploy your application to a target environment
-            echo 'your-deploy-command'
+            sh 'npm pack'
+            String name = sh (script: 'npm pkg get version | xargs echo', returnStdout: true).trim()
+            String version = sh (script: 'npm pkg get version | xargs echo', returnStdout: true).trim()
+            String packageName = "${name}-${version}"
+            sh "mv ${packageName}.tgz ${packageName}_pr_${prInfo.number}.tgz"
         }
+        // Additional stages or post-build actions can be added here
     }
     
 }
 
 /**
+* Process PR merge.
+*/
+private def processPRMerge(prUrl) {
+    def prInfo = [:]
+    prInfo['org'] = getOrg(prUrl)
+    prInfo['repo'] = getRepo(prUrl)
+    prInfo['number'] = getPRNumber(prUrl)
+    prInfo['repoUrl'] = getRepoUrl(prInfo)
+    prInfo['apiUrl'] = getPRApiUrl(prInfo)
+    
+    populatePRInfo(prInfo)
+    echo "Received Pull Request Info ${prInfo}"
+    validatePR(prInfo)
+    echo "Pull request validatad sucessfully"
+    def mergeResp = mergePR(prApiUrl)
+    echo "Pull request merged : ${mergeResp}"
+    prInfo['mergeSuccessful'] = mergeResp.containsKey('merged') && mergeResp.merged
+    return prInfo
+}
+
+/**
+* Validate pull request.
+*/
+private void validatePR(prInfo) {
+    if(prInfo.state != 'open') {
+        error "The given pull request state is in state: ${prInfo.state}. It should be in open state for merging"
+    }
+
+    if(!prInfo.mergeable) {
+        error "The given pull request state is not is not in mergable state"
+    }
+
+    if(prInfo.merged) {
+        error "The given pull request is already merged."
+    }
+
+    if(prInfo.mergeable_state != 'clean') {
+        error "The given pull request is not is mergeable state (clean). merge state found as ${prInfo.mergeable_state}"
+    }
+
+    int requiredApprovalcount = Integer.parseInt(getEnvValue('PR_MERGE_APPROVAL_COUNT', '2'))
+    if(prInfo.approvalCount < requiredApprovalcount) {
+        error "No of approvals found in for the given pull request as ${prInfo.approvalCount}. The required number of approvers: (${requiredApprovalcount})"
+    }
+}
+
+/**
 * Gets the PR Info for the given PR url.
 */
-private def getPRInfo(String prApiUrl) {
+private void populatePRInfo(prInfo) {
     def prInfo = [:]
-    def pr = getRequest(prApiUrl)
-    prInfo['source'] = pr.head.ref
-    prInfo['target'] = pr.base.ref
+    def pr = getRequest(prInfo.apiUrl)
+    prInfo['sourceBranch'] = pr.head.ref
+    prInfo['targetBranch'] = pr.base.ref
     prInfo['state'] = pr.state
     prInfo['merged'] = pr.merged
     prInfo['mergeable'] = pr.mergeable
     prInfo['mergeable_state'] = pr.mergeable_state
     prInfo['approvalCount'] = getApprovalCount("${prApiUrl}/reviews")
     prInfo['statusChecksSucceeded'] = statusCheckSuccessful(pr.statuses_url)
-    return prInfo
 }
 
 /**
 * Gets PR API Url
 */
-private String getPRApiUrl(String prUrl) {
-    String org = getOrg(prUrl)
-    String repo = getRepo(prUrl)
-    String prId = getPRNumber(prUrl)
-    return "https://api.github.com/repos/${org}/${repo}/pulls/${prId}"
+private String getPRApiUrl(prInfo)  {
+    return "https://api.github.com/repos/${prInfo.org}/${prInfo.repo}/pulls/${prInfo.prId}"
+}
+
+/**
+* Gets PR API Url
+*/
+private String getRepoUrl(prInfo)  {
+    return "https://github.com/${prInfo.org}/${prInfo.repo}.git"
 }
 
 /**
@@ -162,20 +204,6 @@ private String getRepo(String prUrl) {
     String urlPart = prUrl.replace("https://github.com/", '')
     return urlPart.tokenize('/')[1]
 }
-
-/**
-* Check given PR can be merged
-*/
-private boolean canMerge(prInfo) {
-    int approvalcount = Integer.parseInt(getEnvValue('PR_MERGE_APPROVAL_COUNT', '2'))
-    return (prInfo.approvalCount == approvalcount
-        && prInfo.statusChecksSucceeded
-        && prInfo.state == 'open'
-        && prInfo.mergeable
-        && !prInfo.merged
-        && prInfo.mergeable_state == 'clean')
-}
-
 
 /**
 * Gets the PR Info for the given PR url.
