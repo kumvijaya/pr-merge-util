@@ -57,7 +57,7 @@ private def processPRMerge(prUrl) {
         echo "Received Pull Request Info ${prInfo}"
         validatePR(prInfo)
         echo "Pull request validatad sucessfully"
-        def mergeResp = mergePR(prApiUrl)
+        def mergeResp = mergePR(prInfo)
         echo "Pull request merged : ${mergeResp}"
         prInfo['mergeSuccessful'] = mergeResp.containsKey('merged') && mergeResp.merged
     }
@@ -93,7 +93,7 @@ private void populatePRInfo(prInfo) {
     prInfo['merged'] = pr.merged
     prInfo['mergeable'] = pr.mergeable
     prInfo['mergeable_state'] = pr.mergeable_state
-    prInfo['approvalCount'] = getApprovalCount("${prInfo.apiUrl}/reviews")
+    prInfo['approvalCount'] = getApprovalCount(prInfo)
     prInfo['statusChecksSucceeded'] = statusCheckSuccessful(pr.statuses_url)
 }
 
@@ -114,7 +114,8 @@ private String getRepoUrl(prInfo)  {
 /**
 * Gets PR Approval count
 */
-private int getApprovalCount(String prReviewsUrl) {
+private int getApprovalCount(prInfo) {
+    String prReviewsUrl = "${prInfo.apiUrl}/reviews"
     def reviews = getRequest(prReviewsUrl)
     def approvedReviews = reviews.findAll { it.state == "APPROVED" }
     return approvedReviews.size()
@@ -190,8 +191,8 @@ private String getRepo(String prUrl) {
 /**
 * Gets the PR Info for the given PR url.
 */
-private def mergePR(String prApiUrl) {
-    String mergeReqUrl = "${prApiUrl}/merge"
+private def mergePR(prInfo) {
+    String mergeReqUrl = "${prInfo.apiUrl}/merge"
     String mergeBody = getMergeBody()
     return putRequest(mergeReqUrl, mergeBody)
 }
