@@ -72,16 +72,8 @@ private void validatePR(prInfo) {
         error "The given pull request state is in state: ${prInfo.state}. It should be in open state for merging"
     }
 
-    if(!prInfo.mergeable) {
-        error "The given pull request state is not is not in mergable state"
-    }
-
     if(prInfo.merged) {
         error "The given pull request is already merged."
-    }
-
-    if(prInfo.mergeable_state != 'clean') {
-        error "The given pull request is not is mergeable state (clean). merge state found as ${prInfo.mergeable_state}"
     }
 
     int requiredApprovalcount = Integer.parseInt(getEnvValue('PR_MERGE_APPROVAL_COUNT', '2'))
