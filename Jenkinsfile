@@ -101,7 +101,7 @@ private void populatePRInfo(prInfo) {
     prInfo['merged'] = pr.merged
     prInfo['mergeable'] = pr.mergeable
     prInfo['mergeable_state'] = pr.mergeable_state
-    prInfo['approvalCount'] = getApprovalCount("${prApiUrl}/reviews")
+    prInfo['approvalCount'] = getApprovalCount("${prInfo.apiUrl}/reviews")
     prInfo['statusChecksSucceeded'] = statusCheckSuccessful(pr.statuses_url)
 }
 
