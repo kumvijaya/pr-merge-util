@@ -16,7 +16,7 @@ Below environment variables can be provided for job run.
 - *PR_MERGE_APPROVAL_COUNT* : Required number of approvals (Ex: 2). Default 0.
 - *PR_MERGE_STATUS_LABELS* : Required statuses to check. Provide as comma seperated if more than one. This is future (Ex: unit-test,lint). Default none.
 
-![jenkins-env-vars](https://github.com/kumvijaya/pr-merge-demo/blob/main/images/env-vars.png)
+![jenkins-env-vars](https://github.com/kumvijaya/pr-merge-demo/blob/develop/images/env-vars.png)
 
 ## Required Credentials
 This expects below github credentials created in Jenkins in Credentials store.
@@ -25,12 +25,12 @@ This expects below github credentials created in Jenkins in Credentials store.
 - *Password*: Github PAT (Personal Access Token, This should have read/write access to repo)
 - *ID*: GITHUB_USER_PASS
 
-![jenkins-github-creds](https://github.com/kumvijaya/pr-merge-demo/blob/main/images/github-creds.png)
+![jenkins-github-creds](https://github.com/kumvijaya/pr-merge-demo/blob/develop/images/github-creds.png)
 
 # Required Job Parameters
 This expects job parameter *prUrl*
 
-![jenkins-job-params](https://github.com/kumvijaya/pr-merge-demo/blob/main/images/job-params.png)
+![jenkins-job-params](https://github.com/kumvijaya/pr-merge-demo/blob/develop/images/job-params.png)
 
 Provide the valid PR Url here (Ex: https://github.com/kumvijaya/pr-merge-demo/pull/1)
 
