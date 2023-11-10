@@ -231,8 +231,10 @@ private appendPackageWithPRNumber(prNumber) {
     String name = powershell(returnStdout: true, script:'npm pkg get name | xargs echo').trim()
     String version = powershell(returnStdout: true, script:'npm pkg get version | xargs echo').trim()
     String packageName = "${name}-${version}"
-    echo "PackageName (${packageName}.tgz) updated to ${packageName}_pr_${prInfo.number}.tgz"
-    sh "mv ${packageName}.tgz ${packageName}_pr_${prNumber}.tgz"
+    String fileName = "${packageName}.tgz"
+    String newFileName = "${packageName}_pr_${prNumber}.tgz"
+    echo "Updating packageName (${fileName}) to ${newFileName}"
+    sh "mv ${fileName} ${newFileName}"
     sh "ls -ltr"
 }
 
