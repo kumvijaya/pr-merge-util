@@ -4,9 +4,11 @@ This is to check and merge the given pull request, and peform the CICD on merged
 Below checks are done as before merging the PR
 - PR is approved with required number of approvers
 - PR passes pre-defined checks (Future)
-- PR is in mergable state (Means not already merged, doesnt have any conflicts)
+- PR is in mergable state (doesnt have any conflicts)
 
-Once the PR is merged, It checksout the merged branh, performs the CICD.
+
+If the given PR is already merged, skips the merging and proceeds with CICD by cloning the merged branch.
+If the given PR is not merged and passes all condions, merges the PR and proceeds with CICD by cloning the merged branch.
 
 Also it adds the PR number to deployment package name. Format: ${PACKAGE_NAME}_pr_${PR_NUMBER}
 
