@@ -16,7 +16,7 @@ properties([
 
 node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
     def prInfo = processPRMerge(params.prUrl)
-    if(prInfo.mergeSuccessful) {
+    if(prInfo.proceedCICD) {
         stage('Checkout') {
             // Check out your source code repository as per pr target branch
             git branch: prInfo.targetBranch, url: prInfo.repoUrl
@@ -56,11 +56,22 @@ private def processPRMerge(prUrl) {
         prInfo['apiUrl'] = getPRApiUrl(prInfo)
         populatePRInfo(prInfo)
         echo "Received Pull Request Info ${prInfo}"
-        validatePR(prInfo)
-        echo "Pull request validatad sucessfully"
-        def mergeResp = mergePR(prInfo)
-        echo "Pull request merged : ${mergeResp}"
-        prInfo['mergeSuccessful'] = mergeResp.containsKey('merged') && mergeResp.merged
+        if(prInfo.merged) {
+            echo "Pull request found already merged, proceeding CICD on merged branch."
+            prInfo['proceedCICD'] = true
+        }else {
+            validatePR(prInfo)
+            echo "Pull request found valid for merging, proceeding with merge"
+            def mergeResp = mergePR(prInfo)
+            echo "Pull request merged : ${mergeResp}"
+            if(mergeResp.containsKey('merged') && mergeResp.merged) {
+                echo "Pull request merged sucessfully. proceeding with CICD on merged branch"
+                prInfo['proceedCICD'] = true
+            }else {
+                echo "Pull request not merged sucessfully. Not proceeding with CICD"
+                prInfo['proceedCICD'] = false
+            }
+        }        
     }
     return prInfo
 }
@@ -71,10 +82,6 @@ private def processPRMerge(prUrl) {
 private void validatePR(prInfo) {
     if(prInfo.state != 'open') {
         error "The given pull request state is in state: ${prInfo.state}. It should be in open state for merging"
-    }
-
-    if(prInfo.merged) {
-        error "The given pull request is already merged."
     }
 
     int requiredApprovalcount = Integer.parseInt(getEnvValue('PR_MERGE_APPROVAL_COUNT', '2'))
