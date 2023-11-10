@@ -16,7 +16,7 @@ Also, it adds the PR number to the deployment package name. Format: ${PACKAGE_NA
 Below environment variables below can be provided for the job run.
 - *PR_MERGE_SLAVE_AGENT_LABEL*: The slave agent label to use (Ex: MacSTANDALONE). Default none.
 - *PR_MERGE_APPROVAL_COUNT*: Required number of approvals (Ex: 2). Default 0.
-- *PR_MERGE_STATUS_LABELS*: Required statuses to check. Provide as comma separated if more than one. This is for the future (Ex: unit-test,lint). Default none.
+- *PR_MERGE_STATUS_LABELS*: Required statuses to check. Provide as comma separated if more than one. This is for the future (Ex: unit-test,code-lint). Default none.
 
 ![jenkins-env-vars](https://github.com/kumvijaya/pr-merge-demo/blob/develop/images/env-vars.png)
 
