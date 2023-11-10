@@ -32,7 +32,7 @@ node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
         stage('Deploy') {
             // Deploy your application to a target environment
             powershell 'npm pack'
-            String packageFile =  sh (script: "find '.' -name '*.tgz'", returnStdout: true).trim()
+            String packageFile =  sh (script: "find . -name *.tgz", returnStdout: true).trim()
             String packageName =  sh (script: "basename ${packageFile} .tgz", returnStdout: true).trim()
             echo "PackageName = ${packageName}"
             sh "mv ${packageName}.tgz ${packageName}_pr_${prInfo.number}.tgz"
