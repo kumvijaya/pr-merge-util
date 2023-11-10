@@ -9,7 +9,7 @@ properties([
             defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
             name: 'prUrl',
             trim: true,
-            description: 'Provide github pull request url: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
+            description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
         )
     ])
 ])
@@ -52,19 +52,19 @@ private def processPRMerge(prUrl) {
         populatePRInfo(prInfo)
         echo "Received Pull Request Info ${prInfo}"
         if(prInfo.merged) {
-            echo "Pull request found already merged, proceeding CICD on merged branch."
+            echo "Pull request found already merged, proceeding CICD on the merged branch."
             prInfo['proceedCICD'] = true
         }else {
             validatePR(prInfo)
             echo "Pull request found valid for merging, proceeding with merge"
             def mergeResp = mergePR(prInfo)
-            echo "Pull request merged : ${mergeResp}"
+            echo "Pull request merged: ${mergeResp}"
             if(mergeResp.containsKey('merged') && mergeResp.merged) {
-                echo "Pull request merged sucessfully. proceeding with CICD on merged branch"
+                echo "Pull request merged successfully. proceeding with CICD on the merged branch"
                 prInfo['proceedCICD'] = true
             }else {
-                echo "Pull request not merged sucessfully. Not proceeding with CICD"
-                prInfo['proceedCICD'] = false
+		prInfo['proceedCICD'] = false
+                error "Pull request not merged. Please check the PR, Not proceeding with CICD"
             }
         }        
     }
