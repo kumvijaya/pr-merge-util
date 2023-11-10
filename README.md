@@ -41,7 +41,7 @@ Provide the valid PR URL here (Ex: https://github.com/kumvijaya/pr-merge-demo/pu
 
 Merger utility can be kept as a Shared Jenkins pipeline library so that all the repos can leverage this without code duplication. 
 
-Refer [this](https://www.jenkins.io/doc/book/pipeline/shared-libraries/) for more details on the Jenkins Shared Pipeline library
+Refer [this](https://www.jenkins.io/doc/book/pipeline/shared-libraries/) link for more details on the Jenkins Shared Pipeline library
 
 
 
