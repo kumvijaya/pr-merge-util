@@ -32,12 +32,7 @@ node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
         stage('Deploy') {
             // Deploy your application to a target environment
             powershell 'npm pack'
-            String name = powershell(returnStdout: true, script:'npm pkg get name | xargs echo').trim()
-            String version = powershell(returnStdout: true, script:'npm pkg get version | xargs echo').trim()
-            String packageName = "${name}-${version}"
-            echo "PackageName (${packageName}.tgz) updated to ${packageName}_pr_${prInfo.number}.tgz"
-            sh "mv ${packageName}.tgz ${packageName}_pr_${prInfo.number}.tgz"
-            sh "ls -ltr"
+            appendPackageWithPRNumber(prInfo.number)
         }
         // Additional stages or post-build actions can be added here
     }
@@ -227,6 +222,18 @@ private String getEnvValue(String envKey, String defaultValue='') {
 		}
 	}
 	return envValue
+}
+
+/**
+* Appends package name with PR number
+*/
+private appendPackageWithPRNumber(prNumber) {
+    String name = powershell(returnStdout: true, script:'npm pkg get name | xargs echo').trim()
+    String version = powershell(returnStdout: true, script:'npm pkg get version | xargs echo').trim()
+    String packageName = "${name}-${version}"
+    echo "PackageName (${packageName}.tgz) updated to ${packageName}_pr_${prInfo.number}.tgz"
+    sh "mv ${packageName}.tgz ${packageName}_pr_${prNumber}.tgz"
+    sh "ls -ltr"
 }
 
 /**
