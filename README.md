@@ -1,29 +1,29 @@
 # Pull Request Pipeline
 
-This is to check and merge the given pull request, and peform the CICD on merged branch.
+This is to check and merge the given pull request and perform the CICD on the merged branch.
 Below checks are done as before merging the PR
-- PR is approved with required number of approvers
-- PR passes pre-defined checks (Future)
-- PR is in mergable state (doesnt have any conflicts)
+- PR is approved with the required number of approvers
+- PR passes required PR checks (Future)
+- PR is in a mergeable state (doesn't have any conflicts)
 
 
-If the given PR is already merged, skips the merging and proceeds with CICD by cloning the merged branch.
-If the given PR is not merged and passes all condions, merges the PR and proceeds with CICD by cloning the merged branch.
+If the given PR is already merged, skip the merging and proceed with CICD by cloning the merged branch.
+If the given PR is not merged and passes all conditions, merge the PR and proceed with CICD by cloning the merged branch.
 
-Also it adds the PR number to deployment package name. Format: ${PACKAGE_NAME}_pr_${PR_NUMBER}
+Also, it adds the PR number to the deployment package name. Format: ${PACKAGE_NAME}_pr_${PR_NUMBER}
 
 ## Environment Variables
-Below environment variables can be provided for job run.
-- *PR_MERGE_SLAVE_AGENT_LABEL* : The slave agent label to use (Ex: MacSTANDALONE). Default none.
-- *PR_MERGE_APPROVAL_COUNT* : Required number of approvals (Ex: 2). Default 0.
-- *PR_MERGE_STATUS_LABELS* : Required statuses to check. Provide as comma seperated if more than one. This is future (Ex: unit-test,lint). Default none.
+Below environment variables below can be provided for the job run.
+- *PR_MERGE_SLAVE_AGENT_LABEL*: The slave agent label to use (Ex: MacSTANDALONE). Default none.
+- *PR_MERGE_APPROVAL_COUNT*: Required number of approvals (Ex: 2). Default 0.
+- *PR_MERGE_STATUS_LABELS*: Required statuses to check. Provide as comma separated if more than one. This is for the future (Ex: unit-test,lint). Default none.
 
 ![jenkins-env-vars](https://github.com/kumvijaya/pr-merge-demo/blob/develop/images/env-vars.png)
 
 ## Required Credentials
-This expects below github credentials created in Jenkins in Credentials store.
+This expects below GitHub credentials created in Jenkins in the Credentials store.
 - *Type*: UsernamePassword
-- *Username*: Github user id
+- *Username*: Github user-id
 - *Password*: Github PAT (Personal Access Token, This should have read/write access to repo)
 - *ID*: GITHUB_USER_PASS
 
@@ -34,14 +34,14 @@ This expects job parameter *prUrl*
 
 ![jenkins-job-params](https://github.com/kumvijaya/pr-merge-demo/blob/develop/images/job-params.png)
 
-Provide the valid PR Url here (Ex: https://github.com/kumvijaya/pr-merge-demo/pull/1)
+Provide the valid PR URL here (Ex: https://github.com/kumvijaya/pr-merge-demo/pull/1)
 
 
 # Future Thoughts
 
-Merger util can be kept as Shared Jenkins pipeline library, so that all the repos can leverage this without the code duplication. 
+Merger utility can be kept as a Shared Jenkins pipeline library so that all the repos can leverage this without code duplication. 
 
-Refer [this](https://www.jenkins.io/doc/book/pipeline/shared-libraries/) for more details on Jenkins Shared Pipeline library
+Refer [this](https://www.jenkins.io/doc/book/pipeline/shared-libraries/) for more details on the Jenkins Shared Pipeline library
 
 
 
