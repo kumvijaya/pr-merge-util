@@ -35,8 +35,8 @@ node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
             String name = powershell(returnStdout: true, script:'npm pkg get name | xargs echo')
             String version = powershell(returnStdout: true, script:'npm pkg get version | xargs echo')
             String packageName = "${name}-${version}"
+            echo "PackageName (${packageName}.tgz) updated to ${packageName}_pr_${prInfo.number}.tgz"
             sh "mv ${packageName}.tgz ${packageName}_pr_${prInfo.number}.tgz"
-            echo "PackageName Updated"
             sh "ls -ltr"
         }
         // Additional stages or post-build actions can be added here
