@@ -6,7 +6,6 @@ Below checks are done as before merging the PR
 - PR passes required PR checks (Future)
 - PR is in a mergeable state (doesn't have any conflicts)
 
-
 If the given PR is already merged, skip the merging and proceed with CICD by cloning the merged branch.
 If the given PR is not merged and passes all conditions, merge the PR and proceed with CICD by cloning the merged branch.
 
