@@ -1,3 +1,15 @@
+#!/usr/bin/env python
+
+"""This is the python module to process the pull request for merging.
+
+This module takes below parameters.
+pr -- Pull request url (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1)
+This performs below:
+1. This connects to Github API, query the pull request with given pr url.
+2. Checks the PR details whether it is mergeable (by checking the approvals and checks).
+3. if the PR is mergeable, proceeds with merging.
+"""
+
 import requests
 import os
 import json
@@ -5,7 +17,7 @@ import argparse
 from urllib.parse import urlparse
 
 parser = argparse.ArgumentParser(
-    description='PR URL'
+    description='Pull request merger'
 )
 parser.add_argument(
     '-p',
@@ -27,26 +39,14 @@ def process_pr(pr_url):
         dict: pr data
     """
     pr_info = get_pr_info(pr_url)
-    pr_info['process_message'] = []
-    if pr_info['merged']:
-        pr_info['proceed_cicd'] = True
-        pr_info['process_message'].append("Pull request found already merged, proceeding CICD on the merged branch.")
-    else:
-        if not pr_info['approved']:
+    if not pr_info['already_merged']:
+        if pr_info['approvals'] < pr_info['required_approvals']:
             raise Exception(f"No of approvals found in for the given pull request as {pr_info['approvals']}. The required number of approvers: ({pr_info['required_approvals']})")
-        elif not pr_info['checks_succeeded']:
+        elif len(pr_info['failed_checks']) > 0:
             raise Exception(f"Required PR checks found failed ({pr_info['failed_checks']})")
-        else:
-            print('Proceeding with merge')               
+        else:            
             merge_info = merge(pr_info)
             pr_info.update(merge_info)
-            if pr_info['merge_succeeded']: 
-                pr_info['proceed_cicd'] = True
-                pr_info['process_message'].append("Pull request merged successfully, proceeding CICD on the merged branch.")
-            else:
-                pr_info['proceed_cicd'] = False
-                pr_info['process_message'].append(pr_info['merge_message'])
-                pr_info['process_message'].append("Pull request merge failed, Not proceeding CICD on the merged branch. Please check your PR")
     return pr_info
 
 def get_pr_info(pr_url):
@@ -64,10 +64,7 @@ def get_pr_info(pr_url):
     pr = get_request(pr_info['pr_api_url'])
     pr_info['source_branch'] = pr['head']['ref']
     pr_info['target_branch'] = pr['base']['ref']
-    pr_info['state'] = pr['state']
-    pr_info['merged'] = pr['merged']
-    pr_info['mergeable'] = pr['mergeable']
-    pr_info['mergeable_state'] = pr['mergeable_state']
+    pr_info['already_merged'] = pr['merged']
     pr_reviews_url = f"{pr_info['pr_api_url']}/reviews"
     pr_info.update(get_approval_info(pr_reviews_url))
     pr_info.update(get_checks_info(pr['statuses_url']))
@@ -126,7 +123,6 @@ def get_approval_info(pr_reviews_url):
     approved_reviews = [review for review in pr_reviews if review['state'] == "APPROVED"]
     approval_info['approvals'] = len(approved_reviews)
     approval_info['required_approvals'] = int(get_env_var_value('PR_MERGE_APPROVAL_COUNT', '2'))
-    approval_info['approved'] = approval_info['approvals'] >= approval_info['required_approvals']
     return approval_info
     
 def get_checks_info(pr_checks_url):
@@ -146,7 +142,6 @@ def get_checks_info(pr_checks_url):
         found_required_check = [check for check in pr_checks if check['context'] == required_check]
         if found_required_check and found_required_check['state'] != 'success':
             checks_info['failed_checks'].append(found_required_check)
-    checks_info['checks_succeeded'] = len(checks_info['failed_checks']) == 0
     return checks_info
 
 def get_reponse_json(resp, url, data=''):
@@ -165,8 +160,7 @@ def get_reponse_json(resp, url, data=''):
         output = resp.json()
     else:
         resp_content = resp.content if resp.content else ""
-        error = f"Error in api invocation {url}, data: {data}, status: {resp.status_code}, Response received: {resp_content}"
-        raise Exception(error)
+        raise Exception(f"Error in api invocation {url}, data: {data}, status: {resp.status_code}, Response received: {resp_content}")
     return output
 
 def get_request(url):
@@ -214,8 +208,6 @@ def put_request(url, data):
         data (json) : json data
     """
     session = get_session(gh_token)
-    print(url)
-    print(data)
     resp = session.put(url, data)
     return get_reponse_json(resp, url, data)
 
@@ -231,19 +223,11 @@ def merge(pr_info):
     """
     merge_info = {}
     url = f"{pr_info['pr_api_url']}/merge"
-    print(f"url={url}")
     body = {}
     body['commit_title'] = 'PR merged by PR Utility (Jenkins)'
     body['commit_message'] = 'PR merged by PR Utility (Jenkins) with required checks'
-    output = put_request(url, json.dumps(body))
-    merge_info['merge_succeeded'] = False
-    if 'error' in output:
-        merge_info['merge_message'] = output['error']
-    else:
-        merge_info['merge_succeeded'] = output['merged']
-    print (merge_info)
+    merge_info = put_request(url, json.dumps(body))
     return merge_info
-
 
 
 pr_info = process_pr(pr_url)

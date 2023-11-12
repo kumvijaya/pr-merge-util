@@ -14,16 +14,13 @@ properties([
     ])
 ])
 
-//getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')
-//MacSTANDALONE
-
-node('abcs') {
-    def prInfo = processMerge(params.prUrl)
-    echo "prInfo = ${prInfo}"
-    if(prInfo.proceed_cicd) {
+node('MacSTANDALONE') {
+    def prMergeInfo = processMerge(params.prUrl)
+    if(prMergeInfo.already_merged || prMergeInfo.merged) {
+        echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
         stage('Checkout') {
             // Check out your source code repository as per pr target branch
-            git branch: prInfo.target_branch, url: prInfo.pr_repo_url
+            git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
         }
         stage('Build') {
             // Build your application
@@ -39,45 +36,30 @@ node('abcs') {
             appendPackageWithPRNumber(prInfo.pr_number)
         }
         // Additional stages or post-build actions can be added here
+    }else {
+        error "Pull request not merged, Please check the PR."
     }
 }
 
+/**
+* Process the given PR
+*/
 def processMerge(prUrl) {
-    def prInfo = [:]
+    def prMergeInfo = [:]
     stage('Merge PR') {
         dir('merge') {
             checkout scm
             withCredentials([usernamePassword(credentialsId: 'GITHUB_USER_PASS', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
-                sh "python -m pip install requests==2.26.0 --user"
-                sh "python git-merger.py -p ${params.prUrl}"
-                prInfo = readJSON file: 'git_merge_ouput.json'
+                sh """
+                    python -m pip install -r requirements.txt --user
+                    python git-merger.py -p ${prUrl}
+                """
+                prMergeInfo = readJSON file: 'git_merge_ouput.json'
             }
             deleteDir()
         }
     }
-    return prInfo
-}
-
-/**
-* Gets the env variable value
-*/
-private String getEnvValue(String envKey, String defaultValue='') {
-	String envValue = defaultValue
-	def envMap = env.getEnvironment()
-	envMap.each{ key, value ->
-		if (key == envKey) {
-			envValue = !isEmpty(value) ? value : defaultValue
-			return envValue
-		}
-	}
-	return envValue
-}
-
-/**
-* Is given string empty
-*/
-private boolean isEmpty(String input) {
-    return !input?.trim()
+    return prMergeInfo
 }
 
 /**
@@ -86,10 +68,5 @@ private boolean isEmpty(String input) {
 private appendPackageWithPRNumber(prNumber) {
     String name = powershell(returnStdout: true, script:'npm pkg get name | xargs echo').trim()
     String version = powershell(returnStdout: true, script:'npm pkg get version | xargs echo').trim()
-    String packageName = "${name}-${version}"
-    String fileName = "${packageName}.tgz"
-    String newFileName = "${packageName}_pr_${prNumber}.tgz"
-    echo "Updating packageName (${fileName}) to ${newFileName}"
-    sh "mv ${fileName} ${newFileName}"
-    sh "ls -ltr"
+    sh "mv ${name}-${version}.tgz ${name}-${version}_pr_${prNumber}.tgz"
 }
