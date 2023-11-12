@@ -15,6 +15,11 @@ properties([
 ])
 
 node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
+    sh "python -m pip install -r requirements.txt --user"
+    withCredentials([usernamePassword(credentialsId: 'GITHUB_USER_PASS', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
+        
+    }
+
     def prInfo = processPRMerge(params.prUrl)
     if(prInfo.proceedCICD) {
         stage('Checkout') {
