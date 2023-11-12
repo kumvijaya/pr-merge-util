@@ -41,7 +41,7 @@ node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
 def processMerge(prUrl) {
     def prInfo = [:]
     withCredentials([usernamePassword(credentialsId: 'GITHUB_USER_PASS', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
-        sh "python -m pip install -r requirements.txt --user"
+        sh "python -m pip install requests==2.26.0 --user"
         sh "python git-merger.py -p ${params.prUrl}"
         prInfo = readJSON file: "${env.WORKSPACE}\\git_merge_ouput.json"
         echo "prInfo = ${prInfo}"
