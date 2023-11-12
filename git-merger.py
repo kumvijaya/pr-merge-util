@@ -213,7 +213,7 @@ def put_request(url, data):
         data (json) : json data
     """
     session = get_session(gh_token)
-    resp = session.post(url, data)
+    resp = session.put(url, data)
     return get_reponse_json(resp, url, data)
 
 
