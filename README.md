@@ -31,7 +31,7 @@ This expects below GitHub credentials created in Jenkins in the Credentials stor
 ![jenkins-github-creds](https://github.com/kumvijaya/pr-merge-demo/blob/feature/python-merge/images/github-creds.png)
 
 # Required Job Parameters
-This expects job parameter *prUrl*
+This expects the job parameter *prUrl*
 
 ![jenkins-job-params](https://github.com/kumvijaya/pr-merge-demo/blob/feature/python-merge/images/job-params.png)
 
