@@ -20,7 +20,7 @@ node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
     if(prInfo.proceed_cicd) {
         stage('Checkout') {
             // Check out your source code repository as per pr target branch
-            git branch: prInfo.targetBranch, url: prInfo.repoUrl
+            git branch: prInfo.target_branch, url: prInfo.pr_repo_url
         }
         stage('Build') {
             // Build your application

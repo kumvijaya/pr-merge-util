@@ -92,6 +92,7 @@ def get_pr_url_info(pr_url):
     url_info['repo'] = pr_path[1]
     url_info['pr_number'] = pr_path[3]
     url_info['pr_api_url'] = f"https://api.github.com/repos/{url_info['org']}/{url_info['repo']}/pulls/{url_info['pr_number']}"
+    url_info['pr_repo_url'] = f"https://github.com/${url_info['org']}/${url_info['repo']}.git"
     return url_info
 
 def get_env_var_value(env_var, default_val=''):
