@@ -32,13 +32,12 @@ def process_pr(pr_url):
         pr_info['proceed_cicd'] = True
         pr_info['process_message'].append("Pull request found already merged, proceeding CICD on the merged branch.")
     else:
-        pr_info['process_message'].append(pr_info['approval_message'])
-        pr_info['process_message'].append(pr_info['checks_message'])
         if not pr_info['approved']:
-            pr_info['proceed_cicd'] = False
+            raise Exception(f"No of approvals found in for the given pull request as {pr_info['approvals']}. The required number of approvers: ({pr_info['required_approvals']})")
         elif not pr_info['checks_succeeded']:
-            pr_info['proceed_cicd'] = False
-        else:                    
+            raise Exception(f"Required PR checks found failed ({pr_info['failed_checks']})")
+        else:
+            print('Proceeding with merge')               
             merge_info = merge(pr_info)
             pr_info.update(merge_info)
             if pr_info['merge_succeeded']: 
@@ -124,10 +123,9 @@ def get_approval_info(pr_reviews_url):
     approval_info = {}
     pr_reviews = get_request(pr_reviews_url)
     approved_reviews = [review for review in pr_reviews if review['state'] == "APPROVED"]
-    approvals = len(approved_reviews)
-    required_approvals = int(get_env_var_value('PR_MERGE_APPROVAL_COUNT', '2'))
-    approval_info['approved'] = approvals < required_approvals
-    approval_info['approval_message'] = f'PR approved by required number of approvers ({required_approvals})' if approval_info['approved'] else f"No of approvals found in for the given pull request as {approvals}. The required number of approvers: ({required_approvals})"
+    approval_info['approvals'] = len(approved_reviews)
+    approval_info['required_approvals'] = int(get_env_var_value('PR_MERGE_APPROVAL_COUNT', '2'))
+    approval_info['approved'] = approval_info['approvals'] >= approval_info['required_approvals']
     return approval_info
     
 def get_checks_info(pr_checks_url):
@@ -148,7 +146,6 @@ def get_checks_info(pr_checks_url):
         if found_required_check and found_required_check['state'] != 'success':
             checks_info['failed_checks'].append(found_required_check)
     checks_info['checks_succeeded'] = len(checks_info['failed_checks']) == 0
-    checks_info['checks_message'] = f'PR checks succeeded' if checks_info['checks_succeeded'] else f"Required PR checks found failed ({checks_info['failed_checks']})"
     return checks_info
 
 def get_reponse_json(resp, url, data=''):
@@ -240,6 +237,7 @@ def merge(pr_info):
         merge_info['merge_message'] = output['error']
     else:
         merge_info['merge_succeeded'] = output['merged']
+    print (merge_info)
     return merge_info
 
 
