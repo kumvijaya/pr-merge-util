@@ -60,24 +60,40 @@ def get_pr_info(pr_url):
         dict: pr data
     """
     pr_info = {}
-    pr_url_info = urlparse(pr_url)
-    pr_path = pr_url_info.path.lstrip('/').rstrip('/').split("/")
-    pr_info['org'] = pr_path[0]
-    pr_info['repo'] = pr_path[1]
-    pr_info['pr_number'] = pr_path[3]
-    pr_api_url = f"https://api.github.com/repos/{pr_info['org']}/{pr_info['repo']}/pulls/{pr_info['pr_number']}"
-    pr_info['pr_api_url'] = pr_api_url
-    pr = get_request(pr_api_url)
+    pr_url_info = get_pr_url_info(pr_url)
+    pr_info.update(pr_url_info)
+    pr = get_request(pr_info['pr_api_url'])
     pr_info['source_branch'] = pr['head']['ref']
     pr_info['target_branch'] = pr['base']['ref']
     pr_info['state'] = pr['state']
     pr_info['merged'] = pr['merged']
     pr_info['mergeable'] = pr['mergeable']
     pr_info['mergeable_state'] = pr['mergeable_state']
-    pr_reviews_url = f"{pr_api_url}/reviews"
+    pr_reviews_url = f"{pr_info['pr_api_url']}/reviews"
     pr_info.update(get_approval_info(pr_reviews_url))
     pr_info.update(get_checks_info(pr['statuses_url']))
     return pr_info
+
+def get_pr_url_info(pr_url):
+    """Gets pr url info 
+    Parses the given url and gets the PR informtation
+
+    Args:
+        pr_url (str) : pr url ex: https://github.com/kumvijaya/pr-merge-demo/pull/1
+
+    Returns:
+        dict: PR Url info
+    """
+    url_info = {}
+    pr_url_info = urlparse(pr_url)
+    pr_path = pr_url_info.path.lstrip('/').rstrip('/').split("/")
+    if len(pr_path) < 4:
+        raise Exception(f"Invalid Pull request URL reeived : {pr_url}")
+    url_info['org'] = pr_path[0]
+    url_info['repo'] = pr_path[1]
+    url_info['pr_number'] = pr_path[3]
+    url_info['pr_api_url'] = f"https://api.github.com/repos/{url_info['org']}/{url_info['repo']}/pulls/{url_info['pr_number']}"
+    return url_info
 
 def get_env_var_value(env_var, default_val=''):
     """Gets the env var value of the var 
@@ -151,7 +167,8 @@ def get_reponse_json(resp, url, data=''):
         output = resp.json()
     else:
         resp_content = resp.content if resp.content else ""
-        output['error'] = f"Error in api invocation {url}, data: {data}, status: {resp.status_code}, Response received: {resp_content}"
+        error = f"Error in api invocation {url}, data: {data}, status: {resp.status_code}, Response received: {resp_content}"
+        raise Exception(error)
     return output
 
 def get_request(url):
