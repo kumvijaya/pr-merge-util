@@ -41,7 +41,7 @@ node(getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')) {
 def processMerge(prUrl) {
     def prInfo = [:]
     dir('base') {
-        git url: 'https://github.com/kumvijaya/pr-merge-demo.git' branch: 'feature/python-merge'
+        git url: 'https://github.com/kumvijaya/pr-merge-demo.git', branch: 'feature/python-merge'
         withCredentials([usernamePassword(credentialsId: 'GITHUB_USER_PASS', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
             sh "python -m pip install requests==2.26.0 --user"
             sh "python git-merger.py -p ${params.prUrl}"
