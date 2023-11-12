@@ -213,6 +213,8 @@ def put_request(url, data):
         data (json) : json data
     """
     session = get_session(gh_token)
+    print(url)
+    print(data)
     resp = session.put(url, data)
     return get_reponse_json(resp, url, data)
 
@@ -228,6 +230,7 @@ def merge(pr_info):
     """
     merge_info = {}
     url = f"{pr_info['pr_api_url']}/merge"
+    print(f"url={url}")
     body = {}
     body['commit_title'] = 'PR merged by PR Utility (Jenkins)'
     body['commit_message'] = 'PR merged by PR Utility (Jenkins) with required checks'
