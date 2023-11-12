@@ -15,8 +15,9 @@ properties([
 ])
 
 //getEnvValue('PR_MERGE_SLAVE_AGENT_LABEL', '')
+//MacSTANDALONE
 
-node('MacSTANDALONE') {
+node('abcs') {
     def prInfo = processMerge(params.prUrl)
     echo "prInfo = ${prInfo}"
     if(prInfo.proceed_cicd) {
