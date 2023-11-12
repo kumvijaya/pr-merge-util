@@ -33,7 +33,7 @@ node('MacSTANDALONE') {
         stage('Deploy') {
             // Deploy your application to a target environment
             powershell 'npm pack'
-            appendPackageWithPRNumber(prInfo.pr_number)
+            appendPackageWithPRNumber(prMergeInfo.pr_number)
         }
         // Additional stages or post-build actions can be added here
     }else {
