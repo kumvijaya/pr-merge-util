@@ -19,7 +19,7 @@ Below environment variables below can be provided for the job run.
 - *PR_MERGE_APPROVAL_COUNT*: Required number of approvals (Ex: 2). Default 0.
 - *PR_MERGE_STATUS_LABELS*: Required statuses to check. Provide as comma separated if more than one. This is for the future (Ex: unit-test,code-lint). Default none.
 
-![jenkins-env-vars](https://github.com/kumvijaya/pr-merge-demo/blob/develop/images/env-vars.png)
+![jenkins-env-vars](https://github.com/kumvijaya/pr-merge-demo/blob/feature/python-merge/images/env-vars.png)
 
 ## Required Credentials
 This expects below GitHub credentials created in Jenkins in the Credentials store.
@@ -28,12 +28,12 @@ This expects below GitHub credentials created in Jenkins in the Credentials stor
 - *Password*: Github PAT (Personal Access Token, This should have read/write access to repo)
 - *ID*: GITHUB_USER_PASS
 
-![jenkins-github-creds](https://github.com/kumvijaya/pr-merge-demo/blob/develop/images/github-creds.png)
+![jenkins-github-creds](https://github.com/kumvijaya/pr-merge-demo/blob/feature/python-merge/images/github-creds.png)
 
 # Required Job Parameters
 This expects job parameter *prUrl*
 
-![jenkins-job-params](https://github.com/kumvijaya/pr-merge-demo/blob/develop/images/job-params.png)
+![jenkins-job-params](https://github.com/kumvijaya/pr-merge-demo/blob/feature/python-merge/images/job-params.png)
 
 Provide the valid PR URL here (Ex: https://github.com/kumvijaya/pr-merge-demo/pull/1)
 
