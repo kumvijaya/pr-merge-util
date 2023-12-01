@@ -4,55 +4,57 @@ pipeline {
     agent {
         label "MacSTANDALONE"
     }
-    stages {
-        stage('Setup parameters') {
-            steps {
-                script { 
-                    properties([
-                        parameters([
-                            string(
-                                defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
-                                name: 'prUrl',
-                                trim: true,
-                                description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
-                            )
-                        ])
-                    ])
-                }
-            }
-        }
+
+        // stage('Setup parameters') {
+        //     steps {
+        //         script { 
+        //             properties([
+        //                 parameters([
+        //                     string(
+        //                         defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
+        //                         name: 'prUrl',
+        //                         trim: true,
+        //                         description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
+        //                     )
+        //                 ])
+        //             ])
+        //         }
+        //     }
+        // }
         def prMergeInfo = processMerge(params.prUrl)
         if(prMergeInfo.already_merged || prMergeInfo.merged) {
             echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
-            stage('Checkout') {
-                steps {
-                    // Check out your source code repository as per pr target branch
-                    git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
+            stages {
+                stage('Checkout') {
+                    steps {
+                        // Check out your source code repository as per pr target branch
+                        git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
+                    }
                 }
-            }
-            stage('Build') {
-                steps {
-                    // Build your application
-                    powershell 'npm install'
+                stage('Build') {
+                    steps {
+                        // Build your application
+                        powershell 'npm install'
+                    }
                 }
-            }
-            stage('Test') {
-                steps {
-                    // Run tests
-                    powershell 'npm test'
+                stage('Test') {
+                    steps {
+                        // Run tests
+                        powershell 'npm test'
+                    }
                 }
-            }
-            stage('Deploy') {
-                steps {
-                    // Deploy your application to a target environment
-                    powershell 'npm pack'
-                    appendPackageWithPRNumber(prMergeInfo.pr_number)
+                stage('Deploy') {
+                    steps {
+                        // Deploy your application to a target environment
+                        powershell 'npm pack'
+                        appendPackageWithPRNumber(prMergeInfo.pr_number)
+                    }
                 }
             }
         }else {
             error "Pull request not merged, Please check the PR."
         }
-    } 
+    
 }
 
 /**
