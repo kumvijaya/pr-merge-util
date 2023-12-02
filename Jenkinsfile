@@ -4,7 +4,7 @@ pipeline {
      agent {
         label "MacSTANDALONE"
     }
-    script { 
+    environment {
         properties([
             parameters([
                 string(
@@ -15,32 +15,28 @@ pipeline {
                 )
             ])
         ])
-    }
-    script {
         def prMergeInfo = processMerge(params.prUrl)
-        if(prMergeInfo.already_merged || prMergeInfo.merged) {
-            echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
-            echo "PR Number: ${prMergeInfo.pr_number}"
-            stages {
-                stage('Checkout') {
-                    git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
-                }
-                stage('Build') {
-                    powershell 'npm install'
-                }
-                stage('Test') {
-                    powershell 'npm test'
-                }
-                stage('Deploy') {
-                    powershell 'npm pack'
-                    appendPackageWithPRNumber(prMergeInfo.pr_number)
-                }
-            }
-            
-        }else {
-            error "Pull request not merged, Please check the PR."
+        TARGET_BRANCH = prMergeInfo.target_branch
+        REPO_URL = prMergeInfo.pr_repo_url
+        PR_NUMBER = prMergeInfo.pr_number
+    }
+    
+    stages {
+        stage('Checkout') {
+            git branch: env.TARGET_BRANCH, url: env.REPO_URL
+        }
+        stage('Build') {
+            powershell 'npm install'
+        }
+        stage('Test') {
+            powershell 'npm test'
+        }
+        stage('Deploy') {
+            powershell 'npm pack'
+            appendPackageWithPRNumber(env.PR_NUMBER)
         }
     }
+            
 }
 
 /**
