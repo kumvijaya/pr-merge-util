@@ -41,7 +41,6 @@ pipeline {
             error "Pull request not merged, Please check the PR."
         }
     }
-    }
 }
 
 /**
