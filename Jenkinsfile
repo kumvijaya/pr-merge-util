@@ -5,16 +5,16 @@ pipeline {
         label "MacSTANDALONE"
     }
     environment {
-        properties([
-            parameters([
-                string(
-                    defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
-                    name: 'prUrl',
-                    trim: true,
-                    description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
-                )
-            ])
-        ])
+        // properties([
+        //     parameters([
+        //         string(
+        //             defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
+        //             name: 'prUrl',
+        //             trim: true,
+        //             description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
+        //         )
+        //     ])
+        // ])
         def prMergeInfo = processMerge(params.prUrl)
         TARGET_BRANCH = prMergeInfo.target_branch
         REPO_URL = prMergeInfo.pr_repo_url
