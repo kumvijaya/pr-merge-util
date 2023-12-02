@@ -1,60 +1,61 @@
 import groovy.json.JsonSlurper
 
 pipeline {
-    agent {
+     agent {
         label "MacSTANDALONE"
     }
-
-        // stage('Setup parameters') {
-        //     steps {
-        //         script { 
-        //             properties([
-        //                 parameters([
-        //                     string(
-        //                         defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
-        //                         name: 'prUrl',
-        //                         trim: true,
-        //                         description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
-        //                     )
-        //                 ])
-        //             ])
-        //         }
-        //     }
-        // }
-        def prMergeInfo = processMerge(params.prUrl)
-        if(prMergeInfo.already_merged || prMergeInfo.merged) {
-            echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
-            stages {
-                stage('Checkout') {
-                    steps {
-                        // Check out your source code repository as per pr target branch
-                        git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
-                    }
+     stages {
+        stage ('Build with PT merge') {
+            steps {
+                script { 
+                    properties([
+                        parameters([
+                            string(
+                                defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
+                                name: 'prUrl',
+                                trim: true,
+                                description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
+                            )
+                        ])
+                    ])
                 }
-                stage('Build') {
-                    steps {
-                        // Build your application
-                        powershell 'npm install'
-                    }
-                }
-                stage('Test') {
-                    steps {
-                        // Run tests
-                        powershell 'npm test'
-                    }
-                }
-                stage('Deploy') {
-                    steps {
-                        // Deploy your application to a target environment
-                        powershell 'npm pack'
-                        appendPackageWithPRNumber(prMergeInfo.pr_number)
+                script {
+                    def prMergeInfo = processMerge(params.prUrl)
+                    if(prMergeInfo.already_merged || prMergeInfo.merged) {
+                        echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
+                        echo "PR Number: ${prMergeInfo.pr_number}"
+                        stage('Checkout') {
+                            steps {
+                                // Check out your source code repository as per pr target branch
+                                git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
+                            }
+                        }
+                        stage('Build') {
+                            steps {
+                                // Build your application
+                                powershell 'npm install'
+                            }
+                        }
+                        stage('Test') {
+                            steps {
+                                // Run tests
+                                powershell 'npm test'
+                            }
+                        }
+                        stage('Deploy') {
+                            steps {
+                                // Deploy your application to a target environment
+                                powershell 'npm pack'
+                                appendPackageWithPRNumber(prMergeInfo.pr_number)
+                            }
+                        }
+                    }else {
+                        error "Pull request not merged, Please check the PR."
                     }
                 }
             }
-        }else {
-            error "Pull request not merged, Please check the PR."
         }
-    
+    }
 }
 
 /**
