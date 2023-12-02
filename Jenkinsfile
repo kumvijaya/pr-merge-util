@@ -4,24 +4,24 @@ pipeline {
      agent {
         label "MacSTANDALONE"
     }
-     stages {
-        script { 
-            properties([
-                parameters([
-                    string(
-                        defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
-                        name: 'prUrl',
-                        trim: true,
-                        description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
-                    )
-                ])
+    script { 
+        properties([
+            parameters([
+                string(
+                    defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
+                    name: 'prUrl',
+                    trim: true,
+                    description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
+                )
             ])
-        }
-        script {
-            def prMergeInfo = processMerge(params.prUrl)
-            if(prMergeInfo.already_merged || prMergeInfo.merged) {
-                echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
-                echo "PR Number: ${prMergeInfo.pr_number}"
+        ])
+    }
+    script {
+        def prMergeInfo = processMerge(params.prUrl)
+        if(prMergeInfo.already_merged || prMergeInfo.merged) {
+            echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
+            echo "PR Number: ${prMergeInfo.pr_number}"
+            stages {
                 stage('Checkout') {
                     git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
                 }
@@ -35,10 +35,12 @@ pipeline {
                     powershell 'npm pack'
                     appendPackageWithPRNumber(prMergeInfo.pr_number)
                 }
-            }else {
-                error "Pull request not merged, Please check the PR."
             }
+            
+        }else {
+            error "Pull request not merged, Please check the PR."
         }
+    }
     }
 }
 
