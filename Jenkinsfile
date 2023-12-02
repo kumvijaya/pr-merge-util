@@ -25,29 +25,17 @@ pipeline {
                         echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
                         echo "PR Number: ${prMergeInfo.pr_number}"
                         stage('Checkout') {
-                            steps {
-                                // Check out your source code repository as per pr target branch
-                                git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
-                            }
+                            git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
                         }
                         stage('Build') {
-                            steps {
-                                // Build your application
-                                powershell 'npm install'
-                            }
+                            powershell 'npm install'
                         }
                         stage('Test') {
-                            steps {
-                                // Run tests
-                                powershell 'npm test'
-                            }
+                            powershell 'npm test'
                         }
                         stage('Deploy') {
-                            steps {
-                                // Deploy your application to a target environment
-                                powershell 'npm pack'
-                                appendPackageWithPRNumber(prMergeInfo.pr_number)
-                            }
+                            powershell 'npm pack'
+                            appendPackageWithPRNumber(prMergeInfo.pr_number)
                         }
                     }else {
                         error "Pull request not merged, Please check the PR."
