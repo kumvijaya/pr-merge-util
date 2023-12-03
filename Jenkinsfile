@@ -4,39 +4,61 @@ pipeline {
      agent {
         label "MacSTANDALONE"
     }
-    environment {
-        // properties([
-        //     parameters([
-        //         string(
-        //             defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
-        //             name: 'prUrl',
-        //             trim: true,
-        //             description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
-        //         )
-        //     ])
-        // ])
-        def prMergeInfo = processMerge(params.prUrl)
-        TARGET_BRANCH = prMergeInfo.target_branch
-        REPO_URL = prMergeInfo.pr_repo_url
-        PR_NUMBER = prMergeInfo.pr_number
-    }
-    
     stages {
-        stage('Checkout') {
-            git branch: env.TARGET_BRANCH, url: env.REPO_URL
+        stages {
+            stage ('Main Stage') {
+                steps {
+                    script {
+                        setJobProperties()
+                        def prMergeInfo = processMerge(params.prUrl)
+                        if(prMergeInfo.already_merged || prMergeInfo.merged) {
+                            echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
+                            stage('Checkout') {
+                                // Check out your source code repository as per pr target branch
+                                git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
+                            }
+                            stage('Build') {
+                                // Build your application
+                                powershell 'npm install'
+                            }
+                            stage('Test') {
+                                // Run tests
+                                powershell 'npm test'
+                            }
+                            stage('Deploy') {
+                                // Deploy your application to a target environment
+                                powershell 'npm pack'
+                                appendPackageWithPRNumber(prMergeInfo.pr_number)
+                            }
+                        }else {
+                            error "Pull request not merged, Please check the PR."
+                        }
+                    }
+
+                }
+            }
         }
-        stage('Build') {
-            powershell 'npm install'
-        }
-        stage('Test') {
-            powershell 'npm test'
-        }
-        stage('Deploy') {
-            powershell 'npm pack'
-            appendPackageWithPRNumber(env.PR_NUMBER)
-        }
-    }
             
+    }
+}
+
+/**
+ * Sets the properties for the job.
+ */
+def setJobProperties() {
+    properties([
+        durabilityHint('PERFORMANCE_OPTIMIZED'),
+        disableResume(),
+        [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator',  daysToKeepStr: '90', numToKeepStr: '50']],
+        parameters([
+            string(
+                defaultValue: 'https://github.com/kumvijaya/pr-merge-demo/pull/1',
+                name: 'prUrl',
+                trim: true,
+                description: 'Provide GitHub pull request URL: (Example: https://github.com/kumvijaya/pr-merge-demo/pull/1).'
+            )
+        ])
+    ])
 }
 
 /**
