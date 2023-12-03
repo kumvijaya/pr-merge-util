@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        stage ('Main Stage') {
+        stage ('Build with PR') {
             steps {
                 script {
                     setJobProperties()
