@@ -1,10 +1,9 @@
 import groovy.json.JsonSlurper
 
 pipeline {
-     agent {
+    agent {
         label "MacSTANDALONE"
     }
-
     stages {
         stage ('Build with PR') {
             steps {
@@ -34,7 +33,6 @@ pipeline {
                         error "Pull request not merged, Please check the PR."
                     }
                 }
-
             }
         }
     }
