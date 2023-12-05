@@ -39,6 +39,15 @@ node('MacSTANDALONE') {
     }else {
         error "Pull request not merged, Please check the PR."
     }
+
+    post {
+        success {
+            echo "success!!"
+        }
+        failure {
+            echo "failure!!"
+        }
+    }
 }
 
 /**
