@@ -24,11 +24,11 @@ pipeline {
                             // Run tests
                             powershell 'npm test'
                         }
-                        stage('Deploy') {
-                            // Deploy your application to a target environment
-                            powershell 'npm pack'
-                            appendPackageWithPRNumber(prMergeInfo.pr_number)
-                        }
+                        // stage('Deploy') {
+                        //     // Deploy your application to a target environment
+                        //     powershell 'npm pack'
+                        //     appendPackageWithPRNumber(prMergeInfo.pr_number)
+                        // }
                     }else {
                         error "Pull request not merged, Please check the PR."
                     }

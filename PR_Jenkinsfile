@@ -1,0 +1,132 @@
+import groovy.json.JsonSlurper
+
+pipeline {
+    agent {
+        label "MacSTANDALONE"
+    }
+    environment {
+        s3_downloadLink = sh(script: 'aws s3 presign s3://fluidra-android-build/nightly/${BUILD_NUMBER}/iaqualink-signed-${VERSION}-${BUILD_TIMESTAMP}.apk --expires-in 604800', returnStdout: true).trim()
+    }
+    stages {
+        stage ('Build with PR') {
+            steps {
+                script {
+                    setJobProperties()
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'awscredentialss3', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        s3_downloadLink = sh(script: """aws s3 presign s3://fluidra-android-build/nightly/${BUILD_NUMBER}/iaqualink-signed-${VERSION}-${BUILD_TIMESTAMP}.apk --expires-in 604800""", returnStdout: true).trim()
+                    }
+                    def prMergeInfo = processMerge(params.prUrl)
+                    if(prMergeInfo.already_merged || prMergeInfo.merged) {
+                        echo "Given pull request ${prMergeInfo.already_merged ? 'found already merged' : 'merged'}, Proceeding CCID on target branch"
+                        stage('Checkout') {
+                            // Check out your source code repository as per pr target branch
+                            git branch: prMergeInfo.target_branch, url: prMergeInfo.pr_repo_url
+                        }
+                        stage('FluidraPro Build APK') {
+                            // flutter build apk
+                            sh """
+                                flutter --version
+                                aws s3 sync s3://fluidra-android-build/flutter/FlutterEnvFiles /Users/jenkins/workspace/${JOB_NAME}
+                                flutter clean
+                                flutter pub get
+                                flutter build apk --debug
+                                pwd
+                                aws s3 cp /Users/jenkins/workspace/${JOB_NAME}/build/app/outputs/flutter-apk/app-debug.apk s3://fluidra-pro-build/PR/${prMergeInfo.pr_number}/android/flutter-debug.apk
+                            """		 
+                        }
+                        stage('SauceLab Upload apk'){
+                            sh """
+                                    pwd
+                                    curl -u \"iot.carlsbad:7d513d2e-f860-42aa-8ed0-1d6327e0163e\" --location --request POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' --form 'payload=@\"/Users/jenkins/workspace/${JOB_NAME}/build/app/outputs/flutter-apk/app-debug.apk\"' --form 'name=\"fluidraPro_PR-${prMergeInfo.pr_number}.apk\"'
+                                """       
+                        }
+                        stage('Flutter Build IPA') { 
+                            sh """
+                                security list-keychain
+                                security default-keychain
+                                security unlock-keychain -p "jenkins" "$HOME/Library/Keychains/login.keychain-db"
+                                cd ios
+                                ls -ltrm -rf 
+                                rm -rf Runner.xcarchive || true
+                                rm -rf Runnerxcarchive.zip || true
+                                pwd
+                                pod install
+                                fastlane Prbuilds
+                                aws s3 cp /Users/jenkins/workspace/${JOB_NAME}/ios/Runner.ipa s3://fluidra-pro-build/PR/${prMergeInfo.pr_number}/ios/Runner.ipa      
+                            """
+                        }
+                        stage('SauceLab Upload apk'){
+                            sh """
+                                    pwd
+                                    curl -u \"iot.carlsbad:7d513d2e-f860-42aa-8ed0-1d6327e0163e\" --location --request POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' --form 'payload=@\"/Users/jenkins/workspace/${JOB_NAME}/ios/Runner.ipa\"' --form 'name=\"fluidraPro_PR-${prMergeInfo.pr_number}.ipa\"'
+                                """       
+                        }
+
+                    }else {
+                        error "Pull request not merged, Please check the PR."
+                    }
+                }
+            }
+        }
+    }
+    post {
+        success {
+            slackSend (
+                channel: 'android-builds-status',
+                tokenCredentialId: 'Slack-Android-Build',
+                baseUrl: 'https://zodiaciot.slack.com/services/hooks/jenkins-ci/',
+                teamDomain: 'zodiaciot',
+                message: "Build Status: ${currentBuild.result}, \nBuild Info: \nJOB NAME: ${JOB_NAME}, \nBranch: development, \nVersion: ${VERSION}, \nBuild Number: ${BUILD_NUMBER}, \nBuild Time PST: ${BUILD_TIMESTAMP}, \nRelease build downloadLink: <${s3_downloadLink}|Download>"
+            )
+        }
+        failure {
+            slackSend (
+                channel: 'android-builds-status',
+                tokenCredentialId: 'Slack-Android-Build',
+                baseUrl: 'https://zodiaciot.slack.com/services/hooks/jenkins-ci/',
+                teamDomain: 'zodiaciot',
+                message: "Build Status: ${currentBuild.result}, \nBuild Info: \nJOB NAME: ${JOB_NAME}, \nBranch: development, \nVersion: ${VERSION}, \nBuild Number: ${BUILD_NUMBER}, \nBuild Time PST: ${BUILD_TIMESTAMP}"
+            )
+        }
+    }
+}
+
+/**
+ * Sets the properties for the job.
+ */
+def setJobProperties() {
+    properties([
+        durabilityHint('PERFORMANCE_OPTIMIZED'),
+        disableResume(),
+        [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator',  daysToKeepStr: '90', numToKeepStr: '50']],
+        parameters([
+            string(
+                defaultValue: 'https://github.com/Zodiac-Engineering/fluidra-pro-mobile/pull/000',
+                name: 'prUrl',
+                trim: true,
+                description: 'Provide GitHub pull request URL: (Example: https://github.com/Zodiac-Engineering/fluidra-pro-mobile/pull/000).'
+            )
+        ])
+    ])
+}
+
+/**
+* Process the given PR
+*/
+def processMerge(prUrl) {
+    def prMergeInfo = [:]
+    stage('Merge PR') {
+        dir('merge') {
+            checkout scm
+            withCredentials([usernamePassword(credentialsId: 'DevOps-Support-User', usernameVariable: 'DevOps-Support-User', passwordVariable: 'FluidraJenkins2023!')]) {
+                sh """
+                    python3 git-merger.py -p ${prUrl}
+                """
+                prMergeInfo = readJSON file: 'git_merge_ouput.json'
+            }
+            deleteDir()
+        }
+    }
+    return prMergeInfo
+}
+
