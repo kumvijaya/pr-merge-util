@@ -30,11 +30,11 @@ node('MacSTANDALONE') {
             // Run tests
             powershell 'npm test'
         }
-        stage('Deploy') {
-            // Deploy your application to a target environment
-            powershell 'npm pack'
-            appendPackageWithPRNumber(prMergeInfo.pr_number)
-        }
+        // stage('Deploy') {
+        //     // Deploy your application to a target environment
+        //     powershell 'npm pack'
+        //     appendPackageWithPRNumber(prMergeInfo.pr_number)
+        // }
         // Additional stages or post-build actions can be added here
     }else {
         error "Pull request not merged, Please check the PR."
