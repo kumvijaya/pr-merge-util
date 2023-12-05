@@ -40,13 +40,14 @@ node('MacSTANDALONE') {
         error "Pull request not merged, Please check the PR."
     }
 
-    post {
-        success {
-            echo "success!!"
-        }
-        failure {
-            echo "failure!!"
-        }
+}
+
+post {
+    success {
+        echo "success!!"
+    }
+    failure {
+        echo "failure!!"
     }
 }
 
